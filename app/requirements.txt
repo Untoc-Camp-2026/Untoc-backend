@@ -4,3 +4,7 @@ SQLAlchemy==2.0.50
 python-dotenv==1.0.0
 mysql-connector-python==9.1.0
 aiomysql==0.3.2
+passlib[bcrypt]
+bcrypt==3.2.2
+python-jose
+python-multipart
