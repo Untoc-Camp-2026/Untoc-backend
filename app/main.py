@@ -1,8 +1,9 @@
 from fastapi import FastAPI
-from core.base import Base
-from core.database import engine
+from app.core.base import Base
+from app.core.database import engine
+from app.api import attendance
 app = FastAPI()
-
+app.include_router(attendance.router)
 
 @app.on_event("startup")
 async def startup():
