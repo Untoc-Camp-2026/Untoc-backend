@@ -2,12 +2,15 @@ from fastapi import FastAPI
 from core.base import Base
 from core.database import engine
 from fastapi.middleware.cors import CORSMiddleware
-from api import user, attendance, board, calendar
+from api import user, attendance, board, calendar, file
 
 from models.user import User
 from models.calendar import EventCategory, CalendarEvent
+from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
+
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
@@ -26,3 +29,4 @@ app.include_router(user.router, tags=["Users"])
 app.include_router(board.router, prefix="/api/boards", tags=["Boards"])
 app.include_router(attendance.router)
 app.include_router(calendar.router)
+app.include_router(file.router, prefix="/api/files", tags=["Files"])
