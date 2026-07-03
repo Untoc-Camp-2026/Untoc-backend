@@ -122,19 +122,20 @@ export default function Header({ isLogin = false }: HeaderProps) {
 
                   {showBoard && (
                     <div className="absolute top-full left-0 w-44 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1 flex flex-col">
-                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                      {/* 👇 href 파라미터 적용 */}
+                      <Link href="/board?category=FREE" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
                         <span className="text-lg">💬</span> 자유게시판
                       </Link>
-                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                      <Link href="/board?category=EXAM" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
                         <span className="text-lg">📝</span> 시험게시판
                       </Link>
-                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                      <Link href="/board?category=STUDY" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
                         <span className="text-lg">📚</span> 스터디게시판
                       </Link>
-                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                      <Link href="/board?category=JOB" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
                         <span className="text-lg">💼</span> 취업게시판
                       </Link>
-                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                      <Link href="/board?category=GAME" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
                         <span className="text-lg">🎮</span> 게임게시판
                       </Link>
                     </div>
