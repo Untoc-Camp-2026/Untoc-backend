@@ -16,6 +16,6 @@ class AttendanceRecord(Base):
     __tablename__ = "attendance_record" 
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(String, ForeignKey("Users.user_id"), nullable=False)
+    user_id = Column(String(50), ForeignKey("Users.user_id"), nullable=False)
     session_id = Column(Integer, ForeignKey("attendance_session.id"), nullable=False) 
     attended_at = Column(DateTime, default=datetime.utcnow) 
