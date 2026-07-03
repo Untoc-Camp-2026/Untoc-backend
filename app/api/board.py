@@ -35,7 +35,7 @@ async def update_existing_board(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    return await board_service.update_board(db, board_id, board_data, current_user.user_id)
+    return await board_service.update_board(db, board_id, board_data, current_user)
 
 @router.delete("/{board_id}", status_code=status.HTTP_200_OK)
 async def delete_existing_board(

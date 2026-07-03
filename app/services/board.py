@@ -4,6 +4,7 @@ from sqlalchemy import func
 from fastapi import HTTPException, status
 from models.board import Board
 from schemas.board import BoardCreate, BoardUpdate
+from models.user import User
 
 async def create_board(db: AsyncSession, board_data: BoardCreate, user_id: str):
     new_board = Board(
@@ -41,14 +42,14 @@ async def get_board_detail(db: AsyncSession, board_id: int, current_user_id: str
         "is_owner": is_owner
     }
 
-async def update_board(db: AsyncSession, board_id: int, board_data: BoardUpdate, current_user_id: str):
+async def update_board(db: AsyncSession, board_id: int, board_data: BoardUpdate, current_user: User):
     stmt = select(Board).where(Board.board_id == board_id)
     result = await db.execute(stmt)
     board = result.scalars().first()
     
     if not board:
         raise HTTPException(status_code=404, detail="게시글을 찾을 수 없습니다.")
-    if board.user_id != current_user_id:
+    if board.user_id != current_user.user_id and not current_user.admin_status:
         raise HTTPException(status_code=403, detail="수정 권한이 없습니다.")
         
     board.title = board_data.title
