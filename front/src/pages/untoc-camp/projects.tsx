@@ -53,7 +53,7 @@ export default function UntocCampPage() {
           />
 
           {/* 2. 프로젝트 카드 목록 렌더링 */}
-          <section className="flex overflow-x-auto snap-x gap-6 pb-4 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          <section className="flex overflow-x-auto snap-x gap-6 pb-4 scrollbar-thin scrollbar-thumb-[#F7D988] scrollbar-track-transparent">
             {filteredProjects.map((project) => (
             <div 
               key={project.id} 
