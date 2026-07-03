@@ -1,87 +1,125 @@
 import random
-from datetime import datetime, timedelta, date, timezone, time
+from datetime import timezone, time, datetime, timedelta, date
+from datetime import datetime, timedelta, date as date_type
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
-from models.attendance import AttendanceSession, AttendanceRecord
+from models.attendance import AttendanceSession, AttendanceRecord, AttendanceStatus
 from sqlalchemy import select, cast, Date
 from models.user import User
+import secrets
+import string
 
-# 출석 세션 생성 및 출석 코드 생성 로직
-async def create_attendance_session(db: Session, duration_minutes: int = 3):
-    auth_code = f"{random.randint(0, 999999):06d}"
+# 1. 출석 방 생성 & 전체 활동 유저 '결석' 명단 미리 만들기
+async def create_attendance_session(db, duration_minutes: int):
+   # 🌟 랜덤한 6자리 숫자 코드 생성!
+    new_auth_code = "".join(secrets.choice(string.digits) for _ in range(6))
     
+    # 출석 세션(방) 생성할 때 auth_code를 꼭 같이 넣어줍니다.
     expires_at = datetime.utcnow() + timedelta(minutes=duration_minutes)
-
-    new_session = AttendanceSession(auth_code=auth_code, expires_at=expires_at)
-    db.add(new_session)
+    session = AttendanceSession(auth_code=new_auth_code, expires_at=expires_at)
+    
+    db.add(session)
     await db.commit()
-    await db.refresh(new_session)
+    await db.refresh(session)
     
-    return new_session
+    # 한국 시간 기준으로 '오늘 날짜' 구하기
+    today_kst = (datetime.utcnow() + timedelta(hours=9)).date()
+    
+    # 활동 중인(activity_status == 1/True) 전체 유저 불러오기
+    active_users_result = await db.execute(
+        select(User).filter(User.activity_status == True)
+    )
+    active_users = active_users_result.scalars().all()
+    
+    # 오늘 이미 명단이 만들어진 사람이 있는지 확인 (중복 생성 방지)
+    existing_records_result = await db.execute(
+        select(AttendanceRecord).filter(AttendanceRecord.date == today_kst)
+    )
+    existing_user_ids = {record.user_id for record in existing_records_result.scalars().all()}
+    
+    # 명단에 없는 활동 유저들을 '결석' 상태로 쫙 깔아주기
+    for user in active_users:
+        if user.user_id not in existing_user_ids:
+            new_record = AttendanceRecord(
+                user_id=user.user_id,
+                session_id=session.id,
+                date=today_kst,
+                status=AttendanceStatus.ABSENT, # 기본값: 결석
+                attended_at=None
+            )
+            db.add(new_record)
+            
+    await db.commit()
+    return session
 
-# 출석 인증 로직
+# 3. 특정 날짜의 출석 명단 조회 (이전에 수정했던 초간단 버전)
+async def get_records_by_date(db, target_date: date_type):
+    result = await db.execute(
+        select(AttendanceRecord).filter(AttendanceRecord.date == target_date)
+    )
+    records = result.scalars().all()
+    return records
+
+# 2. 유저 출석 인증 (결석 -> 출석으로 변경)
 async def verify_attendance(db, user_id: str, auth_code: str): 
-    result_user = await db.execute(select(User).filter(User.user_id == user_id))
-    user = result_user.scalars().first()
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="가입되지 않은 유저입니다.")
-    
+    # 세션 검증
     result_session = await db.execute(
         select(AttendanceSession)
         .filter(AttendanceSession.auth_code == auth_code)
         .order_by(AttendanceSession.created_at.desc())
     )
     session = result_session.scalars().first()  
-
     if not session:
         raise HTTPException(status_code=404, detail="유효하지 않은 출석 코드입니다.")
-
     if datetime.utcnow() > session.expires_at:
         raise HTTPException(status_code=400, detail="출석 코드가 만료되었습니다.")
 
-    result_record = await db.execute(
-        select(AttendanceRecord).filter(
-            AttendanceRecord.user_id == user_id,
-            AttendanceRecord.session_id == session.id
+    today_kst = (datetime.utcnow() + timedelta(hours=9)).date()
+
+    # 내 출석 명단 칸 찾기
+    query = select(AttendanceRecord).filter_by(user_id=user_id, date=today_kst)
+    record = (await db.execute(query)).scalars().first()
+
+    if record:
+        if record.status == AttendanceStatus.PRESENT:
+            raise HTTPException(status_code=400, detail="오늘은 이미 출석하셨습니다.")
+        
+        # '결석' 칸을 '출석'으로 업데이트
+        record.status = AttendanceStatus.PRESENT
+        record.session_id = session.id
+        record.attended_at = datetime.utcnow()
+    else:
+        # 혹시 방금 가입해서 아침 명단에 없던 유저라면 새로 만들어줌
+        record = AttendanceRecord(
+            user_id=user_id, 
+            session_id=session.id,
+            date=today_kst,
+            status=AttendanceStatus.PRESENT,
+            attended_at=datetime.utcnow()
         )
-    )
-    existing_record = result_record.scalars().first()
-
-    if existing_record:
-        raise HTTPException(status_code=400, detail="이미 출석이 완료되었습니다.")
-
-    new_record = AttendanceRecord(user_id=user_id, session_id=session.id)
-    db.add(new_record)
+        db.add(record)
 
     await db.commit()
-    await db.refresh(new_record)
+    await db.refresh(record)
+    return record
 
-    return new_record
-
-# 날짜별 조회 로직
-async def get_records_by_date(db, target_date: date):
-    start_dt = datetime.combine(target_date, datetime.min.time()) - timedelta(hours=9)
-    end_dt = start_dt + timedelta(days=1)
+# 4. 관리자가 수동으로 출석/결석 상태 수정
+async def update_attendance_status(db, user_id: str, target_date: date_type, status: AttendanceStatus):
+    query = select(AttendanceRecord).filter_by(user_id=user_id, date=target_date)
+    record = (await db.execute(query)).scalars().first()
     
-    result = await db.execute(
-        select(AttendanceRecord)
-        .filter(AttendanceRecord.attended_at >= start_dt)
-        .filter(AttendanceRecord.attended_at < end_dt)
-    )
-    
-    return result.scalars().all()
-
-# 출석 시간 수정 로직
-async def update_attendance(db, record_id: int, target_date: date):
-    result = await db.execute(select(AttendanceRecord).filter(AttendanceRecord.id == record_id))
-    record = result.scalars().first()
-    
-    if not record:
-        raise HTTPException(status_code=404, detail="해당 출석 기록을 찾을 수 없습니다.")
-    
-    record.attended_at = datetime.combine(target_date, time(0, 0))
-    
+    if record:
+        # 기록이 있으면 상태만 업데이트
+        record.status = status
+    else:
+        # 기록이 없으면 지정한 날짜에 새로운 상태로 데이터 생성
+        record = AttendanceRecord(
+            user_id=user_id,
+            date=target_date,
+            status=status
+        )
+        db.add(record)
+        
     await db.commit()
     await db.refresh(record)
     return record
