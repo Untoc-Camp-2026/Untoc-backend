@@ -12,7 +12,7 @@ export default function Header({ isLogin = false }: HeaderProps) {
   const [showCamp, setShowCamp] = useState(false);
 
   return (
-    <header className="w-full border-b border-gray-200 bg-white">
+    <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
       <div className="flex h-24 items-center justify-between px-12">
 
         {/* Logo */}
