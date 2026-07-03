@@ -1,7 +1,7 @@
 from fastapi import FastAPI
-from app.core.base import Base
-from app.core.database import engine
-from app.api import attendance
+from core.base import Base
+from core.database import engine
+from api import attendance
 from fastapi.middleware.cors import CORSMiddleware
 from api import user
 app = FastAPI()

@@ -1,6 +1,6 @@
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey
 from datetime import datetime
-from app.core.base import Base 
+from core.base import Base 
 
 # 사용자가 출석할 수 있는 방을 생성하고 관리하기 위한 테이블
 class AttendanceSession(Base):  
