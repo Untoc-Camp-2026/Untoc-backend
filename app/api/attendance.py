@@ -8,6 +8,7 @@ from typing import List
 from api.user import get_current_user, get_current_admin
 from schemas.attendance import AttendanceAdminUpdateRequest
 from models.user import User
+from api.dependencies import get_current_user
 
 # 모든 api 주소 앞에 /attendance 붙히기, Attendance라는 그룹으로 묶어주기
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
