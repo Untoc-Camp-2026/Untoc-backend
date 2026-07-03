@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from fastapi import HTTPException
 from app.models.attendance import AttendanceSession, AttendanceRecord
 from sqlalchemy import select, cast, Date
+from app.models.user import User
 
 # 출석 세션 생성 및 출석 코드 생성 로직
 async def create_attendance_session(db: Session, duration_minutes: int = 3):
@@ -20,6 +21,11 @@ async def create_attendance_session(db: Session, duration_minutes: int = 3):
 
 # 출석 인증 로직
 async def verify_attendance(db, user_id: str, auth_code: str): 
+    result_user = await db.execute(select(User).filter(User.user_id == user_id))
+    user = result_user.scalars().first()
+    
+    if not user:
+        raise HTTPException(status_code=404, detail="가입되지 않은 유저입니다.")
     
     result_session = await db.execute(
         select(AttendanceSession)
