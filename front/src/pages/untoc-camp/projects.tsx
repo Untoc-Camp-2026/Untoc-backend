@@ -38,9 +38,9 @@ export default function UntocCampPage() {
   const filteredProjects = PROJECT_DATA.filter((p) => p.term === activeTerm);
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] pt-32">
+    <div className="min-h-screen bg-[#FAF8F5]">
       <Navbar />
-      <main className="px-6 max-w-[1200px] mx-auto pb-20">
+      <main className="px-6 max-w-[1200px] mx-auto pb-20 pt-12">
           <div className="mb-8">
             <h6 className="text-[#9C7B75] inline-flex items-center gap-2 px-3 py-1 bg-[#FEF3D0] rounded-full mb-4">🏆 UNTOC CAMP</h6>
             <h1 className="text-3xl font-bold text-[#6B4E48]">역대 작품들</h1>

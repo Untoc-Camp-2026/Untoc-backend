@@ -5,7 +5,7 @@ import Navbar from '../../components/layout/Header';
 
 export default function UntocCampPage() {
   return (
-    <div className="min-h-screen bg-[#FDFAF5] pt-32">
+    <div className="min-h-screen bg-[#FDFAF5]">
       <Navbar />
 
       <main className="pb-24">
