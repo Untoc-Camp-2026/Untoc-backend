@@ -1,29 +1,22 @@
 import { apiClient } from '../utils/api';
-import { User } from '../types/user';
 
-// 로그인 응답으로 받을 데이터 규격 (임시)
-interface LoginResponse {
-  accessToken: string;
-  user: User;
-}
-
-// 1. 로그인 요청
+// 1. 로그인 (FastAPI 규격에 맞춘 폼 데이터 전송 ★핵심)
 export const login = async (loginId: string, password: string) => {
-  return apiClient<LoginResponse>('/auth/login', {
+  const params = new URLSearchParams();
+  params.append('username', loginId); // FastAPI는 무조건 username으로 받습니다.
+  params.append('password', password);
+
+  // 응답으로 { access_token: "...", token_type: "bearer" } 가 옵니다.
+  return apiClient<{ access_token: string; token_type: string }>('/login', {
     method: 'POST',
-    body: JSON.stringify({ loginId, password }),
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: params.toString(),
   });
 };
 
-// 2. 내 프로필 정보 가져오기
-export const getMyProfile = async () => {
-  return apiClient<User>('/auth/me');
-};
-
-// 3. 프로필 업데이트 (사진, 자기소개, 비밀번호 변경)
-export const updateProfile = async (updateData: Partial<User> & { oldPassword?: string; newPassword?: string }) => {
-  return apiClient<User>('/auth/me', {
-    method: 'PATCH',
-    body: JSON.stringify(updateData),
-  });
+// 2. 내 토큰 확인용 테스트 (GET /me)
+export const getMe = async () => {
+  return apiClient<{ message: string; token: string }>('/me');
 };
