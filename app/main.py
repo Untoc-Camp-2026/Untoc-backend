@@ -2,7 +2,11 @@ from fastapi import FastAPI
 from core.base import Base
 from core.database import engine
 from fastapi.middleware.cors import CORSMiddleware
-from api import user,attendance
+from api import user, attendance
+
+from models.user import User
+from models.calendar import EventCategory, CalendarEvent
+
 app = FastAPI()
 
 app.add_middleware(
