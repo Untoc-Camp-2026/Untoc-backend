@@ -53,15 +53,19 @@ export default function UntocCampPage() {
           />
 
           {/* 2. 프로젝트 카드 목록 렌더링 */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <section className="flex overflow-x-auto snap-x gap-6 pb-4 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
             {filteredProjects.map((project) => (
-              <ProjectCard 
-                key={project.id} 
+            <div 
+              key={project.id} 
+              className="snap-center flex-shrink-0 w-full sm:w-[calc(50%-12px)] md:w-[calc(33.333%-16px)] lg:w-[calc(25%-18px)] max-w-[300px]"
+            >
+              <ProjectCard
                 project={project} 
                 onClick={() => setSelectedProject(project)} 
               />
+              </div>
             ))}
-          </div>
+          </section>
         </div>
       </main>
 
