@@ -28,7 +28,7 @@ class UserCreate(BaseModel):
     user_id: str
     password: str
     name: str
-    generation: int
+    generation: float
     role: Optional[RoleEnum] = None
 class UserProfileUpdate(BaseModel):
     introduction: Optional[str] = None
@@ -173,7 +173,7 @@ async def signup_via_excel(
                 user_id=str(row['user_id']),
                 password=str(row['password']),
                 name=str(row['name']),
-                generation=int(row['generation']),
+                generation=float(row['generation']),
                 role=row.get('role') if row.get('role') else None
             )
             new_user = await create_user(db, user_data)
