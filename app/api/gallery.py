@@ -8,14 +8,12 @@ import uuid
 
 from core.database import get_db
 from models.gallery import Gallery
-from schemas.gallery import GalleryResponse
+from schemas.gallery import GalleryResponse, GalleryCreate
 from models.user import User
 from api.user import get_current_user
 
 router = APIRouter(prefix="/gallery", tags=["Gallery"])
 
-UPLOAD_DIR = "uploads/gallery"
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 @router.get("", response_model=List[GalleryResponse])
 async def get_galleries(
@@ -53,10 +51,7 @@ async def get_galleries(
 
 @router.post("", response_model=GalleryResponse, status_code=status.HTTP_201_CREATED)
 async def upload_gallery(
-    year: int = Form(...),       # generation 대신 year로 받음
-    semester: int = Form(...),
-    name: str = Form(...),
-    file: UploadFile = File(...),
+    gallery_data: GalleryCreate,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -69,20 +64,11 @@ async def upload_gallery(
             detail="관리자만 갤러리 사진을 업로드할 수 있습니다."
         )
 
-    extension = file.filename.split(".")[-1]
-    unique_filename = f"{uuid.uuid4()}.{extension}"
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    image_url = f"/{UPLOAD_DIR}/{unique_filename}"
-
     new_gallery = Gallery(
-        year=year,               # DB에 year 저장
-        semester=semester,
-        name=name,
-        image_url=image_url
+        year=gallery_data.year,               # DB에 year 저장
+        semester=gallery_data.semester,
+        name=gallery_data.name,
+        image_url=gallery_data.image_url
     )
     
     db.add(new_gallery)

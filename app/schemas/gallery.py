@@ -7,8 +7,7 @@ class GalleryBase(BaseModel):
     name : str
 
 class GalleryCreate(GalleryBase):
-    pass
-
+    image_url: str
 class GalleryResponse(GalleryBase):
     id: int
     image_url: str
