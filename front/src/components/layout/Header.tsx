@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useState } from "react";
-import Logo from "@/assets/images/언톡_스티커.webp"
+import Logo from "@/assets/images/언톡_스티커.webp";
 import Image from "next/image";
 
 type HeaderProps = {
@@ -10,11 +10,12 @@ type HeaderProps = {
 export default function Header({ isLogin = false }: HeaderProps) {
   const [showUntoc, setShowUntoc] = useState(false);
   const [showCamp, setShowCamp] = useState(false);
+  // 게시판 드롭다운 상태 추가
+  const [showBoard, setShowBoard] = useState(false);
 
   return (
-    <header className="w-full border-b border-gray-200 bg-white">
-      <div className="flex h-24 items-center justify-between px-12">
-
+    <header className="w-full border-b border-[#E8E0D5] bg-white relative z-50">
+      <div className="flex h-24 items-center justify-between px-12 max-w-7xl mx-auto w-full">
         {/* Logo */}
         <Link href="/">
           <Image
@@ -28,19 +29,25 @@ export default function Header({ isLogin = false }: HeaderProps) {
 
         {/* 오른쪽 메뉴 전체 */}
         <div className="flex items-center gap-10">
-
           {/* Navigation */}
-          <nav className="flex items-center gap-6 text-[15px] font-medium text-[#6B4E48]">
-
+          <nav className="flex items-center gap-4 text-[15px] font-bold text-[#6B4E48]">
             {!isLogin ? (
               <>
                 {/* UNTOC */}
                 <div
-                  className="relative px-3 py-3"
+                  className="relative px-2 py-3"
                   onMouseEnter={() => setShowUntoc(true)}
                   onMouseLeave={() => setShowUntoc(false)}
                 >
                   <button
+                    className={`rounded-full px-4 py-2 transition-all duration-200 ${
+                      showUntoc
+                        ? "bg-[#F7D988] shadow-sm"
+                        : "hover:bg-[#F7D988] hover:shadow-sm"
+                    }`}
+                  >
+                    UNTOC {showUntoc ? "▲" : "▼"}
+                  </button>
     className={`rounded-full px-4 py-2 transition-all duration-200 ${
       showUntoc
         ? "bg-[#F7D988] shadow-sm"
@@ -50,17 +57,15 @@ export default function Header({ isLogin = false }: HeaderProps) {
     UNTOC {showUntoc ? "▲" : "▼"}
   </button>
 
-                  {showUntoc && ( //여기 mt-3이 문제!!
-                    <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#6B4E48] bg-white shadow-lg">
-                      <Link href="/untoc/about" className="block px-4 py-3 hover:bg-gray-100">
+                  {showUntoc && (
+                    <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1">
+                      <Link href="/untoc/about" className="block px-4 py-3 hover:bg-[#FFFDF5] transition-colors">
                         소개
                       </Link>
-
-                      <Link href="/untoc/history" className="block px-4 py-3 hover:bg-gray-100">
+                      <Link href="/untoc/history" className="block px-4 py-3 hover:bg-[#FFFDF5] transition-colors">
                         연혁
                       </Link>
-
-                      <Link href="/untoc/members" className="block px-4 py-3 hover:bg-gray-100">
+                      <Link href="/untoc/members" className="block px-4 py-3 hover:bg-[#FFFDF5] transition-colors">
                         구성원
                       </Link>
                     </div>
@@ -69,11 +74,19 @@ export default function Header({ isLogin = false }: HeaderProps) {
 
                 {/* CAMP */}
                 <div
-                  className="relative px-3 py-3"
+                  className="relative px-2 py-3"
                   onMouseEnter={() => setShowCamp(true)}
                   onMouseLeave={() => setShowCamp(false)}
                 >
                   <button
+                    className={`rounded-full px-4 py-2 transition-all duration-200 ${
+                      showCamp
+                        ? "bg-[#F7D988] shadow-sm"
+                        : "hover:bg-[#F7D988] hover:shadow-sm"
+                    }`}
+                  >
+                    UNTOC CAMP {showCamp ? "▲" : "▼"}
+                  </button>
     className={`rounded-full px-4 py-2 transition-all duration-200 ${
       showCamp
         ? "bg-[#F7D988] shadow-sm"
@@ -84,12 +97,11 @@ export default function Header({ isLogin = false }: HeaderProps) {
   </button>
 
                   {showCamp && (
-                    <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#6B4E48] bg-white shadow-lg">
-                      <Link href="/untoc-camp/about" className="block px-4 py-3 hover:bg-gray-100">
+                    <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1">
+                      <Link href="/untoc-camp/about" className="block px-4 py-3 hover:bg-[#FFFDF5] transition-colors">
                         소개
                       </Link>
-
-                      <Link href="/untoc-camp/projects" className="block px-4 py-3 hover:bg-gray-100">
+                      <Link href="/untoc-camp/projects" className="block px-4 py-3 hover:bg-[#FFFDF5] transition-colors">
                         역대 작품들
                       </Link>
                     </div>
@@ -98,25 +110,78 @@ export default function Header({ isLogin = false }: HeaderProps) {
 
                 <Link
                   href="/gallery"
-                  className="rounded-full px-4 py-2 transition-all duration-200 hover:bg-[#F7D988] hover:shadow-md"
+                  className="rounded-full px-4 py-2 transition-all duration-200 hover:bg-[#F7D988] hover:shadow-sm"
                 >
                   Gallery
                 </Link>
               </>
             ) : (
               <>
-                <Link href="/board/free">게시판</Link>
-                <Link href="/calendar">캘린더</Link>
-                <Link href="/attendance">출석</Link>
-                <Link href="/mypage">마이페이지</Link>
+                {/* 게시판 (로그인 상태) */}
+                <div
+                  className="relative px-2 py-3"
+                  onMouseEnter={() => setShowBoard(true)}
+                  onMouseLeave={() => setShowBoard(false)}
+                >
+                  <button
+                    className={`rounded-full px-4 py-2 transition-all duration-200 ${
+                      showBoard
+                        ? "bg-[#F7D988] shadow-sm"
+                        : "hover:bg-[#F7D988] hover:shadow-sm"
+                    }`}
+                  >
+                    게시판 {showBoard ? "▲" : "▼"}
+                  </button>
+
+                  {showBoard && (
+                    <div className="absolute top-full left-0 w-44 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1 flex flex-col">
+                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                        <span className="text-lg">💬</span> 자유게시판
+                      </Link>
+                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                        <span className="text-lg">📝</span> 시험게시판
+                      </Link>
+                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                        <span className="text-lg">📚</span> 스터디게시판
+                      </Link>
+                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                        <span className="text-lg">💼</span> 취업게시판
+                      </Link>
+                      <Link href="/board" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
+                        <span className="text-lg">🎮</span> 게임게시판
+                      </Link>
+                    </div>
+                  )}
+                </div>
+
+                <Link
+                  href="/calendar"
+                  className="rounded-full px-4 py-2 transition-all duration-200 hover:bg-[#F7D988] hover:shadow-sm"
+                >
+                  캘린더
+                </Link>
+                <Link
+                  href="/attendance"
+                  className="rounded-full px-4 py-2 transition-all duration-200 hover:bg-[#F7D988] hover:shadow-sm"
+                >
+                  출석
+                </Link>
+                <Link
+                  href="/mypage"
+                  className="rounded-full px-4 py-2 transition-all duration-200 hover:bg-[#F7D988] hover:shadow-sm"
+                >
+                  마이페이지
+                </Link>
               </>
             )}
           </nav>
 
-          {/* Right */}
+          {/* Right (로그인 / 로그아웃) */}
           {!isLogin ? (
             <Link
               href="/login"
+              className="rounded-full border-2 border-[#F7D988] px-6 py-2 text-sm font-semibold text-[#6B4E48] transition-all hover:bg-[#F7D988]"
+            >
               className="
     rounded-full
     border-2
@@ -133,25 +198,14 @@ export default function Header({ isLogin = false }: HeaderProps) {
               Login
             </Link>
           ) : (
-            <button className="
-    rounded-full
-    border-2
-    border-[#F7D988]
-    px-6
-    py-2
-    text-sm
-    font-semibold
-    text-[#6B4E48]
-    transition-all
-    hover:bg-[#F7D988]
-  "
->
+            <Link
+              href="/logout"
+              className="rounded-full border-2 border-[#F7D988] px-6 py-2 text-sm font-semibold text-[#6B4E48] transition-all hover:bg-[#F7D988]"
+            >
               로그아웃
-            </button>
+            </Link>
           )}
-
         </div>
-
       </div>
     </header>
   );
