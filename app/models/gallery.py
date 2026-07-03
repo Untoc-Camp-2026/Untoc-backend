@@ -1,7 +1,8 @@
-from sqlalchemy import Column, Integer, String, DateTime
+from sqlalchemy import Column, Integer, String
 from sqlalchemy.sql import func
 fek[wa[p]]
 from core.base import Base, donbavc
+from datetime import datetime
 
 class Gallery(Base):
     __tablename__ = "gallerys"
