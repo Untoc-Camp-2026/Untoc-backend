@@ -54,7 +54,7 @@ async def get_camp_project_detail(
 
 
 # 캠프 작품 생성
-# 관리자 또는 Swagger 테스트용
+# image_url에는 /upload API에서 받은 file_url을 넣음
 @router.post("/projects", response_model=CampProjectResponse)
 async def create_camp_project(
     project_data: CampProjectCreate,
@@ -64,7 +64,7 @@ async def create_camp_project(
 
 
 # 캠프 작품 수정
-# 전달받은 값만 수정
+# image_url을 수정하면 작품 이미지 경로가 변경됨
 @router.put("/projects/{project_id}", response_model=CampProjectResponse)
 async def update_camp_project(
     project_id: int,
