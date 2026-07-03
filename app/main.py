@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from core.base import Base
 from core.database import engine
 from fastapi.middleware.cors import CORSMiddleware
-from api import user, attendance, board, calendar
+from api import user, attendance, board, calendar, gallery
 
 from models.user import User
 from models.calendar import EventCategory, CalendarEvent
@@ -26,3 +26,4 @@ app.include_router(user.router, tags=["Users"])
 app.include_router(board.router, prefix="/api/boards", tags=["Boards"])
 app.include_router(attendance.router)
 app.include_router(calendar.router)
+app.include_router(gallery.router)
