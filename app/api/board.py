@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.database import get_db
 from api.dependencies import get_current_user, get_optional_current_user, oauth2_scheme
-from schemas.board import BoardCreate, BoardUpdate, BoardDetailResponse, BoardListResponse
+from schemas.board import BoardCreate, BoardUpdate, BoardDetailResponse, BoardListResponse, CommentCreate, CommentUpdate
 from services import board as board_service
 from models.user import User
 
@@ -54,3 +54,34 @@ async def read_boards(
     db: AsyncSession = Depends(get_db)
 ):
     return await board_service.get_board_list(db, category, title, page)
+
+# 1. 댓글 작성
+@router.post("/{board_id}/comments", status_code=status.HTTP_201_CREATED)
+async def create_new_comment(
+    board_id: int,
+    comment_data: CommentCreate, 
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await board_service.create_comment(db, board_id, comment_data, current_user.user_id)
+
+# 2. 댓글 수정 
+# prefix="/api/boards"가 걸려 있으므로 실제 경로는 PUT /api/boards/comments/{comment_id} 가 됨 [cite: 14]
+@router.put("/comments/{comment_id}")
+async def update_existing_comment(
+    comment_id: int,
+    comment_data: CommentUpdate,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return await board_service.update_comment(db, comment_id, comment_data, current_user)
+
+# 3. 댓글 삭제
+@router.delete("/comments/{comment_id}", status_code=status.HTTP_200_OK)
+async def delete_existing_comment(
+    comment_id: int,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    await board_service.delete_comment(db, comment_id, current_user)
+    return {"message": "댓글이 삭제되었습니다."}
