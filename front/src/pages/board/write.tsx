@@ -41,24 +41,6 @@ export default function BoardWrite() {
         <title>글쓰기 - UNTOC</title>
       </Head>
 
-      {/* 상단 GNB */}
-      <header className="w-full h-20 flex items-center justify-between px-8 md:px-16 bg-white border-b border-[#E8E0D5]">
-        <Link href="/" className="flex items-center gap-3">
-          <Image src={untocLogo} alt="UNTOC 로고" width={45} height={45} className="object-contain" />
-          <span className="text-xl font-extrabold tracking-widest text-[#6B4E48]">UNTOC</span>
-        </Link>
-        <nav className="flex items-center gap-8 font-bold text-base">
-          <Link href="/board" className="text-[#6B4E48] border-b-2 border-[#6B4E48] pb-1">게시판</Link>
-          <Link href="/calendar" className="text-[#A3918D] hover:text-[#6B4E48] transition-colors">캘린더</Link>
-          <Link href="/attendance" className="text-[#A3918D] hover:text-[#6B4E48] transition-colors">출석</Link>
-          <Link href="/mypage" className="text-[#A3918D] hover:text-[#6B4E48] transition-colors">마이페이지</Link>
-          <span className="text-[#E8E0D5]">|</span>
-          <Link href="/logout" className="text-[#6B4E48] hover:text-black flex items-center gap-1">
-            <span>[→ 로그아웃</span>
-          </Link>
-        </nav>
-      </header>
-
       {/* 글쓰기 본문 영역 */}
       <main className="flex-1 w-full max-w-5xl mx-auto px-4 py-12">
         <h1 className="text-4xl font-extrabold text-[#6B4E48] mb-8">글쓰기</h1>
