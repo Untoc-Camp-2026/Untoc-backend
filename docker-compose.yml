@@ -8,3 +8,5 @@ services:
     volumes:
       - ./app:/app
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    extra_hosts:                                # 👈 이 줄 추가 (api: 보다 2칸 들여쓰기)
+      - "host.docker.internal:host-gateway"
