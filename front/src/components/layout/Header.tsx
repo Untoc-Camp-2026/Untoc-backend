@@ -48,14 +48,6 @@ export default function Header({ isLogin = false }: HeaderProps) {
                   >
                     UNTOC {showUntoc ? "▲" : "▼"}
                   </button>
-    className={`rounded-full px-4 py-2 transition-all duration-200 ${
-      showUntoc
-        ? "bg-[#F7D988] shadow-sm"
-        : "hover:bg-[#F7D988] hover:shadow-sm"
-    }`}
-  >
-    UNTOC {showUntoc ? "▲" : "▼"}
-  </button>
 
                   {showUntoc && (
                     <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1">
@@ -87,14 +79,6 @@ export default function Header({ isLogin = false }: HeaderProps) {
                   >
                     UNTOC CAMP {showCamp ? "▲" : "▼"}
                   </button>
-    className={`rounded-full px-4 py-2 transition-all duration-200 ${
-      showCamp
-        ? "bg-[#F7D988] shadow-sm"
-        : "hover:bg-[#F7D988] hover:shadow-sm"
-    }`}
-  >
-    UNTOC CAMP {showCamp ? "▲" : "▼"}
-  </button>
 
                   {showCamp && (
                     <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1">
@@ -182,19 +166,6 @@ export default function Header({ isLogin = false }: HeaderProps) {
               href="/login"
               className="rounded-full border-2 border-[#F7D988] px-6 py-2 text-sm font-semibold text-[#6B4E48] transition-all hover:bg-[#F7D988]"
             >
-              className="
-    rounded-full
-    border-2
-    border-[#F7D988]
-    px-6
-    py-2
-    text-sm
-    font-semibold
-    text-[#6B4E48]
-    transition-all
-    hover:bg-[#F7D988]
-  "
->
               Login
             </Link>
           ) : (
