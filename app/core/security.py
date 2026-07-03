@@ -2,6 +2,7 @@
 from datetime import datetime, timedelta, timezone
 from jose import jwt, JWTError
 from passlib.context import CryptContext
+from fastapi import Depends, HTTPException, status
 
 # 비밀번호 해싱을 위한 설정 (Bcrypt 알고리즘 사용)
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
