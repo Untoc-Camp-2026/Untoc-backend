@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String , Boolean, Enum, Text, Float
+from sqlalchemy import Column, Integer, String , Boolean, Enum
 from core.base import Base
 class  User(Base):
     __tablename__ = "Users"
@@ -6,9 +6,8 @@ class  User(Base):
     password = Column(String(500) , nullable = False)
     name = Column(String(50), nullable = False)
     role = Column(Enum('BACKEND', 'FRONTEND'))
-    generation = Column(Float)
+    generation = Column(Integer)
     activity_status = Column(Boolean, default=1, nullable = False)
     admin_status = Column(Boolean, default=0, nullable = False)
-    profile_image_url = Column(String(255), nullable=True)
-    introduction = Column(Text, nullable=True)
+
 #webebeb 해시값 - $2a$12$NcG9Y3izqe.WLhPKblhbv.WfACgbmUtdzHI6xNOnprQmPuOyr2GdG

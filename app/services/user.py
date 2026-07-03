@@ -33,7 +33,7 @@ async def create_user(db, user_data):
         role=user_data.role,
         generation=user_data.generation,
         activity_status=True,
-        admin_status=False
+        admin_status=True
     )
 
     db.add(new_user)
