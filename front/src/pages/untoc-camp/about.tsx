@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Navbar from '../../components/layout/Header';
+import Footer from '../../components/layout/Footer';
 
 export default function UntocCampPage() {
   return (
@@ -75,6 +76,7 @@ export default function UntocCampPage() {
           </div>
         </section>
       </main>
+    <Footer />
     </div>
   );
 }

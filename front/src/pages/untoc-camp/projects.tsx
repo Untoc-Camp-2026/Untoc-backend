@@ -9,6 +9,8 @@ import FilterTabs from '../../components/untoc-camp/FilterTabs';
 import ProjectCard, { Project } from '../../components/untoc-camp/ProjectCard';
 import ProjectDetailModal from '../../components/untoc-camp/ProjectDetailModal';
 
+import Footer from '../../components/layout/Footer';
+
 // 테스트용 데이터
 
 const PROJECT_DATA = [
@@ -74,6 +76,7 @@ export default function UntocCampPage() {
         project={selectedProject}
         onClose={() => setSelectedProject(null)} 
       />
+    <Footer /> 
     </div>
   );
 }
