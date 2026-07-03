@@ -5,6 +5,7 @@ from fastapi import HTTPException
 from app.models.attendance import AttendanceSession, AttendanceRecord
 from sqlalchemy import select, cast, Date
 
+# 출석 세션 생성 및 출석 코드 생성 로직
 async def create_attendance_session(db: Session, duration_minutes: int = 3):
     auth_code = f"{random.randint(0, 999999):06d}"
     
@@ -17,6 +18,7 @@ async def create_attendance_session(db: Session, duration_minutes: int = 3):
     
     return new_session
 
+# 출석 인증 로직
 async def verify_attendance(db, user_id: str, auth_code: str): 
     
     result_session = await db.execute(
@@ -51,8 +53,7 @@ async def verify_attendance(db, user_id: str, auth_code: str):
 
     return new_record
 
-from datetime import datetime, timedelta, timezone
-
+# 날짜별 조회 로직
 async def get_records_by_date(db, target_date: date):
     start_dt = datetime.combine(target_date, datetime.min.time()) - timedelta(hours=9)
     end_dt = start_dt + timedelta(days=1)
@@ -65,6 +66,7 @@ async def get_records_by_date(db, target_date: date):
     
     return result.scalars().all()
 
+# 출석 시간 수정 로직
 async def update_attendance(db, record_id: int, target_date: date):
     result = await db.execute(select(AttendanceRecord).filter(AttendanceRecord.id == record_id))
     record = result.scalars().first()
