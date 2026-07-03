@@ -9,7 +9,7 @@ export const getPosts = async (category: BoardCategory, page: number = 1) => {
 
 // 2. 새 게시글 작성하기
 export const createPost = async (postData: Omit<Post, 'board_id' | 'user_id' | 'is_owner'>) => {
-  return apiClient<Post>('/boards', {
+  return apiClient<Post>('api/boards', {
     method: 'POST',
     body: JSON.stringify(postData),
   });
