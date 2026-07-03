@@ -12,6 +12,8 @@ class AttendanceSession(Base):
     created_at = Column(DateTime, default=datetime.utcnow) 
     expires_at = Column(DateTime, nullable=False) 
 
+
+
 # 출석 상태에 대한 여부
 class AttendanceStatus(str, enum.Enum):
     PRESENT = "출석"

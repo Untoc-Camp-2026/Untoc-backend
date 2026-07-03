@@ -36,7 +36,8 @@ class UserProfileUpdate(BaseModel):
 class UserPasswordUpdate(BaseModel):
     current_password: str
     new_password: str
-
+class ProfileImageUpdate(BaseModel):
+    profile_image_url: str
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 async def get_current_user(token: str= Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
     credentials_exception = HTTPException(
@@ -124,27 +125,17 @@ async def update_password(
 UPLOAD_DIR = "uploads/profiles"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
-@router.post("/me/profile/image")
-async def upload_profile_image(
-    file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
+@router.patch("/me/profile-image")
+async def update_profile_image(
+    image_data: ProfileImageUpdate,
+    current_user: User = Depends(get_current_user), 
     db: AsyncSession = Depends(get_db)
-):
-    extension = file.filename.split(".")[-1]
-    unique_filename = f"{uuid.uuid4()}.{extension}"
-    file_path = os.path.join(UPLOAD_DIR, unique_filename)
-
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    image_url = f"/{UPLOAD_DIR}/{unique_filename}"
-    current_user.profile_image_url = image_url
-
+    ):
+    current_user.profile_image_url = image_data.profile_image_url
     await db.commit()
     await db.refresh(current_user)
-    return {
-        "message" : "프로필 사진이 성공적으로 업로드되었습니다!",
-        "profile_image_url": image_url
-    }
+    return {"message": "프로필 이미지가 성공적으로 업데이트 되었습니다!",
+            "profile_image_url": current_user.profile_image_url}
 @router.post("/admin/signup/excel")
 async def signup_via_excel(
     file: UploadFile = File(...),
@@ -188,3 +179,16 @@ async def signup_via_excel(
         "message": f"엑셀 처리 완료! (성공: {success_count}명, 실패: {len(error_list)}명)",
         "errors": error_list
     }
+
+def get_current_admin(current_user: User = Depends(get_current_user)):
+    """현재 로그인한 유저가 관리자(admin_status == 1)인지 확인하는 함수"""
+    
+    # admin_status 값이 1이 아니라면 403 에러(권한 없음)를 발생시킴
+    if current_user.admin_status != 1:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="관리자 권한이 없습니다."
+        )
+    
+    # 관리자가 맞다면 그대로 유저 정보를 통과시킴!
+    return current_user
