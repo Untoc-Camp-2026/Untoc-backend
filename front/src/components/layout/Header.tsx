@@ -14,8 +14,6 @@ export default function Header({ isLogin = false }: HeaderProps) {
   const [showBoard, setShowBoard] = useState(false);
 
   return (
-    <header className="w-full border-b border-[#E8E0D5] bg-white relative z-50">
-      <div className="flex h-24 items-center justify-between px-12 max-w-7xl mx-auto w-full">
     <header className="sticky top-0 z-50 w-full border-b border-gray-200 bg-white">
       <div className="flex h-24 items-center justify-between px-12">
 
