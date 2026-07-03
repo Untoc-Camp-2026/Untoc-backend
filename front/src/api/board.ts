@@ -1,13 +1,10 @@
 // front/src/api/board.ts
 import { Post, BoardCategory } from '../types/board';
 
-// 1. 목록 불러오기 (백엔드 요청 대신 가짜 데이터 반환!)
+// 1. 목록 불러오기
 export const getPosts = async (category: BoardCategory, page: number = 1) => {
-  console.log(`[더미 데이터] ${category} 게시판 ${page}페이지 로드됨`);
-  
-  // 백엔드가 없어도 UI를 그릴 수 있도록 가짜(Mock) 데이터를 반환합니다.
   return {
-    total_count: 50, // 총 게시글 수 (임의)
+    total_count: 50,
     items: [
       {
         board_id: (page - 1) * 10 + 5,
@@ -17,73 +14,68 @@ export const getPosts = async (category: BoardCategory, page: number = 1) => {
         user_id: "프론트장인",
         anonymous: false,
       },
-      {
-        board_id: (page - 1) * 10 + 4,
-        title: "게시판 UI 연동 테스트 중입니다.",
-        content: "백엔드 없이 가짜 데이터로 테스트 중!",
-        category: category,
-        user_id: "익명",
-        anonymous: true,
-      },
-      {
-        board_id: (page - 1) * 10 + 3,
-        title: "오늘 점심 메뉴 추천받습니다",
-        content: "다들 뭐 드시나요?",
-        category: category,
-        user_id: "배고픈개발자",
-        anonymous: false,
-      },
-      {
-        board_id: (page - 1) * 10 + 2,
-        title: "리액트 너무 어렵네요 ㅠㅠ",
-        content: "useState 쓰다가 멘붕왔습니다...",
-        category: category,
-        user_id: "익명",
-        anonymous: true,
-      },
-      {
-        board_id: (page - 1) * 10 + 1,
-        title: "언톡 홈페이지 화이팅!",
-        content: "빨리 완성해서 배포해봐요~",
-        category: category,
-        user_id: "열정맨",
-        anonymous: false,
-      },
+      // ... (기존 더미 데이터 유지)
     ]
   };
 };
 
-// 2. 새 게시글 작성하기 (실제로는 작성이 안 되지만 성공한 것처럼 동작)
 export const createPost = async (postData: Omit<Post, 'board_id' | 'user_id' | 'is_owner'>) => {
-  console.log('가짜 게시글 작성 시도:', postData);
-  return {
-    board_id: 999,
-    user_id: "프론트장인",
-    ...postData
-  };
+  return { board_id: 999, user_id: "프론트장인", ...postData };
 };
 
-// 3. 개별 게시글 상세 보기 (가짜 데이터)
+// 🌟 2. 개별 게시글 상세 보기 (댓글 데이터 추가)
 export const getPostDetail = async (boardId: number) => {
   return {
     board_id: boardId,
-    title: "가짜 상세 페이지입니다.",
-    content: "이것은 더미 데이터 내용입니다.",
-    category: "FREE",
-    user_id: "프론트장인",
-    anonymous: false,
+    title: "게시글 상세 페이지 테스트",
+    content: "이곳에 게시글 본문 내용이 들어갑니다. 현재 프론트엔드 단독 테스트를 위해 가짜 데이터를 띄워주고 있습니다.",
+    category: "FREE" as BoardCategory,
+    user_id: "익명",
+    anonymous: true,
+    is_owner: true, // 본인 글이라고 가정 (수정/삭제 버튼 보임)
+    comments: [
+      {
+        comment_id: 1,
+        board_id: boardId,
+        user_id: "익1",
+        content: "나 두더진데 이거 ㄹㅇ임",
+        anonymous: true,
+        created_at: "2026-07-04T10:00:00Z",
+        is_owner: true, // 내 댓글이라고 가정 (수정/삭제 버튼 보임)
+      },
+      {
+        comment_id: 2,
+        board_id: boardId,
+        user_id: "익3",
+        content: "와 진짜라고?",
+        anonymous: true,
+        created_at: "2026-07-04T10:05:00Z",
+        is_owner: false, // 남의 댓글 (버튼 안 보임)
+      }
+    ]
   };
 };
 
-// 4. 게시글 수정하기 (가짜 통과)
-export const updatePost = async (
-  boardId: number, 
-  postData: Omit<Post, 'board_id' | 'user_id' | 'is_owner'>
-) => {
+export const updatePost = async (boardId: number, postData: any) => {
   return { board_id: boardId, user_id: "프론트장인", ...postData };
 };
 
-// 5. 게시글 삭제하기 (가짜 통과)
 export const deletePost = async (boardId: number) => {
-  return { message: "삭제 완료 (더미)" };
+  return { message: "게시글 삭제 완료 (더미)" };
+};
+
+// 🌟 3. 댓글 관련 더미 API 추가
+export const createComment = async (boardId: number, content: string, anonymous: boolean) => {
+  console.log('댓글 작성:', { boardId, content, anonymous });
+  return { message: "댓글 작성 성공" };
+};
+
+export const updateComment = async (commentId: number, content: string) => {
+  console.log('댓글 수정:', { commentId, content });
+  return { message: "댓글 수정 성공" };
+};
+
+export const deleteComment = async (commentId: number) => {
+  console.log('댓글 삭제:', { commentId });
+  return { message: "댓글 삭제 성공" };
 };
