@@ -1,6 +1,9 @@
 from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from core.database import get_db 
+from schemas.attendance import SessionResponse, AttendanceVerifyRequest, AttendanceVerifyResponse, SessionCreate, AttendanceRecordResponse, AttendanceUpdateRequest
+from services import attendance as attendance_service
+from core.database import get_db 
 from schemas.attendance import SessionResponse, AttendanceVerifyRequest, SessionCreate, AttendanceRecordResponse
 from services import attendance as attendance_service
 from datetime import date, datetime

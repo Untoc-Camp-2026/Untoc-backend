@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from core.base import Base
 from core.database import engine
+from models import user,attendance
 from fastapi.middleware.cors import CORSMiddleware
 from api import user, attendance, board, calendar
 

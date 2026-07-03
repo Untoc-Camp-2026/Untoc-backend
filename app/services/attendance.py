@@ -3,8 +3,10 @@ from datetime import timezone, time, datetime, timedelta, date
 from datetime import datetime, timedelta, date as date_type
 from sqlalchemy.orm import Session
 from fastapi import HTTPException
+from models.attendance import AttendanceSession, AttendanceRecord
 from models.attendance import AttendanceSession, AttendanceRecord, AttendanceStatus
 from sqlalchemy import select, cast, Date
+from models.user import User
 from models.user import User
 
 # 출석 세션 생성 및 출석 코드 생성 로직
