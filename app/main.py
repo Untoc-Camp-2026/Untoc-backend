@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from core.base import Base
 from core.database import engine
 from fastapi.middleware.cors import CORSMiddleware
-from api import user, attendance
+from api import user, attendance, calendar
 
 from models.user import User
 from models.calendar import EventCategory, CalendarEvent
@@ -21,5 +21,8 @@ app.add_middleware(
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-app.include_router(attendance.router)
+
+# API 라우터 등록
 app.include_router(user.router)
+app.include_router(attendance.router)
+app.include_router(calendar.router)
