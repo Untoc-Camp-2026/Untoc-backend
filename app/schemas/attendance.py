@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime, date
-from typing import List
+from typing import Optional
+from models.attendance import AttendanceStatus
 
 # 관리지가 세션을 만들었을 때, 생성된 정보를 응답으로 돌려주는 기능
 class SessionResponse(BaseModel):
@@ -40,3 +41,23 @@ class AttendanceRecordResponse(BaseModel):
 # 관리자가 출석 날짜를 수정할 때, 어떤 날짜로 바꿀지 입력받는 정보
 class AttendanceUpdateRequest(BaseModel):
     attendance_date: date
+
+# 관리자가 출석부 목록을 볼 때 반환되는 형태
+class AttendanceRecordResponse(BaseModel):
+    user_id: str
+    date: date
+    status: AttendanceStatus
+    attended_at: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True 
+
+# 유저가 출석할 때 보내는 요청 (토큰으로 user_id를 받으므로 auth_code만 필요)
+class AttendanceVerifyRequest(BaseModel):
+    auth_code: str
+
+# 관리자가 출석/결석 상태를 변경할 때 보내는 요청
+class AttendanceAdminUpdateRequest(BaseModel):
+    user_id: str
+    target_date: date
+    status: AttendanceStatus # "출석" 또는 "결석"

@@ -5,6 +5,7 @@ from schemas.attendance import SessionResponse, AttendanceVerifyRequest, Attenda
 from services import attendance as attendance_service
 from datetime import date, datetime
 from typing import List
+from core.security import get_current_user
 
 # 모든 api 주소 앞에 /attendance 붙히기, Attendance라는 그룹으로 묶어주기
 router = APIRouter(prefix="/attendance", tags=["Attendance"])
