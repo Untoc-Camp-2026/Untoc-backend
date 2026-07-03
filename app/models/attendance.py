@@ -14,6 +14,14 @@ class AttendanceSession(Base):
     expires_at = Column(DateTime, nullable=False) 
 
 # 출석했는지를 저장하는 출석부 같은 테이블
+
+
+# 출석 상태에 대한 여부
+class AttendanceStatus(str, enum.Enum):
+    PRESENT = "출석"
+    ABSENT = "결석"
+
+# 출석 목록에 대한 정보
 class AttendanceRecord(Base):
     __tablename__ = "attendance_record" 
 
@@ -34,4 +42,5 @@ class AttendanceRecord(Base):
 
     __table_args__ = (
         UniqueConstraint('user_id', 'date', name='uq_user_date'),
+    )
     )
