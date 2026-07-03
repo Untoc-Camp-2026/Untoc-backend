@@ -30,6 +30,18 @@ class BoardResponse(BaseModel):
     class Config:
         from_attributes = True
 
+class CommentResponse(BaseModel):
+    comment_id: int
+    board_id: int
+    user_id: str
+    content: str
+    anonymous: bool
+    created_at: datetime
+    is_owner: bool  # 프론트에서 수정/삭제 버튼을 띄우기 위해 필요함
+
+    class Config:
+        from_attributes = True
+
 class BoardDetailResponse(BoardResponse):
     is_owner: bool
     comments: List[CommentResponse] = [] # 상세 조회 시 댓글 리스트도 반환하도록 추가
@@ -47,14 +59,3 @@ class CommentUpdate(BaseModel):
     content: str
     anonymous: bool
 
-class CommentResponse(BaseModel):
-    comment_id: int
-    board_id: int
-    user_id: str
-    content: str
-    anonymous: bool
-    created_at: datetime
-    is_owner: bool  # 프론트에서 수정/삭제 버튼을 띄우기 위해 필요함
-
-    class Config:
-        from_attributes = True
