@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Navbar from '../../components/layout/Header';
+import Footer from '../../components/layout/Footer';
 
 // 1. 학기별 데이터를 상단에서 관리 (각 학기마다 6장씩)
 const SEMESTER_DATA: Record<string, { title: string; image: string }[]> = {
@@ -24,10 +25,10 @@ export default function UntocCampPage() {
   const rotations = ['rotate-2', '-rotate-3', 'rotate-1', '-rotate-2', 'rotate-3', '-rotate-1'];
 
   return (
-    <main className="min-h-screen bg-[#FDF8EB] pb-20">
+    <main className="flex flex-col min-h-screen bg-[#FDF8EB]">
       <Navbar />
       
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="flex-grow w-full max-w-6xl mx-auto px-6">
         <h1 className="text-4xl font-bold text-[#6D4E48] mb-8 mt-12">UNTOC 활동 사진</h1>
 
         {/* 학기 선택 드롭다운 */}
@@ -55,7 +56,7 @@ export default function UntocCampPage() {
         </div>
 
         {/* 학기별 6장 사진 갤러리 (삐뚤빼뚤하게 배치) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 justify-items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 justify-items-center mb-20">
           {SEMESTER_DATA[activeTerm].map((item, index) => (
             <div 
               key={index}
@@ -70,6 +71,7 @@ export default function UntocCampPage() {
           ))}
         </div>
       </div>
+  <Footer />
     </main>
   );
 }
