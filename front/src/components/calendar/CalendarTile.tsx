@@ -20,7 +20,7 @@ export default function CalendarTile({
       {/* 일정 */}
       <div className="calendar-events">
 
-        {events.slice(0, 2).map((event) => (
+        {events.slice(0, 3).map((event)=> (
           <div
             key={event.id}
             className="calendar-event"
@@ -29,9 +29,9 @@ export default function CalendarTile({
           </div>
         ))}
 
-        {events.length > 2 && (
+        {events.length > 3&& (
           <div className="calendar-more">
-            +{events.length - 2}
+            +{events.length - 3}
           </div>
         )}
 
