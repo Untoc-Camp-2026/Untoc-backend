@@ -1,106 +1,260 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import dynamic from "next/dynamic";
+
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
-import dynamic from "next/dynamic";
+
+import CalendarTile from "@/components/calendar/CalendarTile";
+import CalendarDetail from "@/components/calendar/CalendarDetail";
+import CalendarModal from "@/components/calendar/CalendarModal";
+
+import type { CalendarEvent } from "@/types/calendar";
+
+import "react-calendar/dist/Calendar.css";
 
 const Calendar = dynamic(() => import("react-calendar"), {
   ssr: false,
 });
-import "react-calendar/dist/Calendar.css";
 
 export default function CalendarPage() {
-  const [date, setDate] = useState(new Date());
+
+  // ======================================
+  // TODO : 백엔드 로그인 연결 시 수정
+  // const isAdmin = user.role === "ADMIN";
+  // ======================================
+
+  const isAdmin = true;
+
+  // ======================================
+  // 선택 날짜
+  // ======================================
+
+  const [selectedDate, setSelectedDate] = useState(new Date());
+
+  // ======================================
+  // 모달
+  // ======================================
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // ======================================
+  // TODO : 백엔드 연결 시 삭제
+  // 더미 데이터
+  // ======================================
+
+  const [events, setEvents] = useState<CalendarEvent[]>([
+    {
+      id: 1,
+      title: "OT",
+      startDate: "2026-09-10",
+      endDate: "2026-09-10",
+      time: "18:00 ~ 20:00",
+      location: "IT관",
+      description: "OT 진행",
+    },
+    {
+      id: 2,
+      title: "최종 발표",
+      startDate: "2026-09-19",
+      endDate: "2026-09-19",
+      time: "19:00",
+      location: "IT관",
+      description: "최종 발표입니다.",
+    },
+  ]);
+
+
+
+  // ======================================
+  // 날짜 포맷
+  // ======================================
+
+  const formatDate = (date: Date) => {
+    const y = date.getFullYear();
+
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+
+    const d = String(date.getDate()).padStart(2, "0");
+
+    return `${y}-${m}-${d}`;
+  };
+
+  // ======================================
+  // 선택된 날짜 일정
+  // ======================================
+
+  const selectedEvents = useMemo(() => {
+
+    return events.filter(
+      (event) =>
+        event.startDate === formatDate(selectedDate)
+    );
+
+  }, [selectedDate, events]);
+
+  // ======================================
+  // 날짜별 일정
+  // ======================================
+
+  const getEventsByDate = (date: Date) => {
+
+    return events.filter(
+      (event) =>
+        event.startDate === formatDate(date)
+    );
+
+  };
+
+  const [modalMode, setModalMode] =
+useState<"create"|"edit">("create");
+
+const [selectedEvent,setSelectedEvent]
+=
+useState<CalendarEvent|null>(null);
+
+
 
   return (
     <>
-      <Header />
+      {/* ===============================
+          Header
+      =============================== */}
+      <Header isLogin={true} />
 
-      <main className="min-h-screen bg-[#FFFDF8]">
-        <div className="mx-auto max-w-7xl px-8 py-14">
-          {/* 제목 */}
-          <div className="mb-10 flex items-start justify-between">
-            <div>
-              <h1 className="text-4xl font-bold text-[#4F3428]">
-                CALENDAR
-              </h1>
+      <main className="calendar-page">
+        {/* ===============================
+            상단
+        =============================== */}
 
-              <p className="mt-2 text-sm text-gray-500">
-                우측 달력의 날짜를 더블클릭하여 상세 정보를 확인하세요.
-              </p>
-            </div>
+        <div className="calendar-header">
+          <div>
+            <h1 className="calendar-title">
+              CALENDAR
+            </h1>
 
+            <p className="calendar-description">
+              날짜를 클릭하면 해당 일정의 상세 정보를 확인할 수 있습니다.
+            </p>
+          </div>
+
+          {/* ======================================
+              TODO : 백엔드 로그인 연결
+              관리자만 일정 등록 가능
+          ====================================== */}
+
+          {isAdmin && (
             <button
-              className="
-                rounded-full
-                bg-[#6A4E43]
-                px-5
-                py-2
-                text-white
-                transition
-                hover:bg-[#4F3428]
-              "
+              className="calendar-register-btn"
+              onClick={() => {
+                setModalMode("create");
+                setSelectedEvent(null);
+                setIsModalOpen(true);
+            }}
             >
               일정 등록하기
             </button>
-          </div>
-
-          {/* 본문 */}
-          <div className="grid grid-cols-2 gap-12">
-            {/* 일정 카드 */}
-            <section>
-              <h2 className="mb-4 text-2xl font-bold text-[#4F3428]">
-                {date instanceof Date
-                  ? date.toLocaleDateString("ko-KR")
-                  : "날짜를 선택하세요"}
-              </h2>
-
-              <div
-                className="
-                  flex
-                  h-[470px]
-                  items-center
-                  justify-center
-                  rounded-3xl
-                  border
-                  border-[#E4D19C]
-                  bg-[#FFF3C8]
-                "
-              >
-                <p className="text-gray-500">
-                  오늘 등록된 일정이 없습니다.
-                </p>
-              </div>
-            </section>
-
-            {/* 달력 */}
-            <section>
-              <div
-                className="
-                  flex
-                  h-[620px]
-                  items-center
-                  justify-center
-                  rounded-3xl
-                  border
-                  border-gray-200
-                  bg-white
-                  p-6
-                  shadow-sm
-                "
-              >
-                <Calendar
-                    value={date}
-                    onChange={(value) => {
-                        if (value instanceof Date) {
-                            setDate(value);
-                        }
-                    }}
-                />
-              </div>
-            </section>
-          </div>
+          )}
         </div>
+
+        {/* ===============================
+            좌우 레이아웃
+        =============================== */}
+
+        <div className="calendar-layout">
+
+          {/* 일정 상세 */}
+
+          <CalendarDetail
+            date={selectedDate}
+            events={selectedEvents}
+            isAdmin={isAdmin}
+            onEdit={(event) => {
+                setSelectedEvent(event);
+                setModalMode("edit");
+                setIsModalOpen(true);
+            }}
+            onDelete={(id) => {
+
+            setEvents((prev) =>
+                prev.filter((event) => event.id !== id)
+            );
+
+            setSelectedEvent(null);
+
+            }}
+        />
+
+          {/* 달력 */}
+
+          <div className="calendar-wrapper">
+
+            <Calendar
+              className="custom-calendar"
+
+              value={selectedDate}
+
+              calendarType="gregory"
+
+              onChange={(value) => {
+                if (value instanceof Date) {
+                  setSelectedDate(value);
+                }
+              }}
+
+              formatDay={() => ""}
+
+              formatShortWeekday={(locale, date) =>
+                ["일", "월", "화", "수", "목", "금", "토"][
+                  date.getDay()
+                ]
+              }
+
+              tileContent={({ date }) => (
+                <CalendarTile
+                  date={date}
+                  events={getEventsByDate(date)}
+                />
+              )}
+            />
+
+          </div>
+
+        </div>
+
+        {/* ===============================
+            일정 등록 모달
+        =============================== */}
+
+        <CalendarModal
+            open={isModalOpen}
+            mode={modalMode}
+            event={selectedEvent}
+            onClose={() => setIsModalOpen(false)}
+            onSave={(newEvent) => {
+
+                    if (modalMode === "create") {
+
+                    setEvents((prev) => [...prev, newEvent]);
+
+                    } else {
+
+                        setEvents((prev) =>
+                        prev.map((event) =>
+                        event.id === newEvent.id ? newEvent : event
+                        )
+                    );
+
+                }
+
+                setIsModalOpen(false);
+            }}
+        />
+
       </main>
+
+      {/* ===============================
+          Footer
+      =============================== */}
 
       <Footer />
     </>
