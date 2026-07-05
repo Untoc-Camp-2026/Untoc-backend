@@ -1,3 +1,5 @@
+import Header from "@/components/layout/Header";
+import Footer from "@/components/layout/Footer";
 import { useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 import type { CalendarEvent } from "@/types/calendar";
@@ -7,7 +9,7 @@ import CalendarModal from "@/components/calendar/CalendarModal";
 import CalendarTile from "@/components/calendar/CalendarTile";
 
 import "react-calendar/dist/Calendar.css";
-import "@/styles/calendar.css";
+
 
 const Calendar = dynamic(() => import("react-calendar"), {
   ssr: false,
@@ -85,6 +87,7 @@ export default function CalendarPage() {
   };
     return (
     <>
+    <Header isLogin={true}/>
       <main className="calendar-page">
         <div className="calendar-header">
           <div>
@@ -127,38 +130,35 @@ export default function CalendarPage() {
           <div className="calendar-wrapper">
 
             <Calendar
-              value={selectedDate}
-              calendarType="gregory"
+                className="custom-calendar"
+                value={selectedDate}
+                calendarType="gregory"
 
-              onChange={(value) => {
-                if (value instanceof Date) {
-                  setSelectedDate(value);
-                }
-              }}
+                onChange={(value) => {
+                    if (value instanceof Date) {
+                    setSelectedDate(value);
+                    }
+                }}
 
-              formatDay={() => ""}
+                formatDay={() => ""}
 
-              formatShortWeekday={(locale, date) => {
-                return ["일", "월", "화", "수", "목", "금", "토"][
-                  date.getDay()
-                ];
-              }}
+                formatShortWeekday={(locale, date) => {
+                    return ["일", "월", "화", "수", "목", "금", "토"][
+                    date.getDay()
+                    ];
+                }}
 
-              tileContent={({ date }) => (
-                <CalendarTile
-                  date={date}
-                  events={getEventsByDate(date)}
-                  isSelected={
-                    formatDate(date) ===
-                    formatDate(selectedDate)
-                  }
+                tileContent={({ date }) => (
+                    <CalendarTile
+                        date={date}
+                        events={getEventsByDate(date)}
+                    />
+                )}
                 />
-              )}
-            />
 
-          </div>
+            </div>
 
-        </div>
+            </div>
 
         {/* ======================================
             일정 등록 모달
@@ -171,6 +171,7 @@ export default function CalendarPage() {
         />
 
       </main>
+      <Footer/>
     </>
   );
 }

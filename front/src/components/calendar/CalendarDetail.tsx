@@ -37,79 +37,70 @@ export default function CalendarDetail({
   // TODO : 여러 일정 선택 기능 추가 가능
   // ======================================
 
-  const event = events[0];
-
   return (
-    <section className="calendar-detail">
+  <section className="calendar-detail">
+    <h2 className="calendar-detail-date">
+      {formatTitleDate(date)}
+    </h2>
 
-      <h2 className="calendar-detail-date">
-        {formatTitleDate(date)}
-      </h2>
+    <div className="calendar-detail-list">
+      {events.map((event) => (
+        <div
+          key={event.id}
+          className="calendar-detail-card"
+        >
+          <div className="calendar-detail-item">
+            <span className="calendar-detail-label">
+              일정
+            </span>
 
-      <div className="calendar-detail-card">
+            <span className="calendar-detail-value">
+              {event.title}
+            </span>
+          </div>
 
-        <div className="calendar-detail-item">
+          <div className="calendar-detail-item">
+            <span className="calendar-detail-label">
+              날짜
+            </span>
 
-          <span className="calendar-detail-label">
-            일정
-          </span>
+            <span className="calendar-detail-value">
+              {event.startDate} ~ {event.endDate}
+            </span>
+          </div>
 
-          <span className="calendar-detail-value">
-            {event.title}
-          </span>
+          <div className="calendar-detail-item">
+            <span className="calendar-detail-label">
+              시간
+            </span>
 
+            <span className="calendar-detail-value">
+              {event.time}
+            </span>
+          </div>
+
+          <div className="calendar-detail-item">
+            <span className="calendar-detail-label">
+              장소
+            </span>
+
+            <span className="calendar-detail-value">
+              {event.location}
+            </span>
+          </div>
+
+          <div className="calendar-detail-item">
+            <span className="calendar-detail-label">
+              상세 설명
+            </span>
+
+            <span className="calendar-detail-value">
+              {event.description || "-"}
+            </span>
+          </div>
         </div>
-
-        <div className="calendar-detail-item">
-
-          <span className="calendar-detail-label">
-            날짜
-          </span>
-
-          <span className="calendar-detail-value">
-            {event.startDate} ~ {event.endDate}
-          </span>
-
-        </div>
-
-        <div className="calendar-detail-item">
-
-          <span className="calendar-detail-label">
-            시간
-          </span>
-
-          <span className="calendar-detail-value">
-            {event.time}
-          </span>
-
-        </div>
-
-        <div className="calendar-detail-item">
-
-          <span className="calendar-detail-label">
-            장소
-          </span>
-
-          <span className="calendar-detail-value">
-            {event.location}
-          </span>
-
-        </div>
-
-        <div className="calendar-detail-item">
-
-          <span className="calendar-detail-label">
-            상세 설명
-          </span>
-
-          <span className="calendar-detail-value">
-            {event.description || "-"}
-          </span>
-
-        </div>
-
-      </div>
-
-    </section>
-  );
+      ))}
+    </div>
+  </section>
+);
 }
