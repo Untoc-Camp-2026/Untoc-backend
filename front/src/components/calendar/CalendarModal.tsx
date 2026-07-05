@@ -43,27 +43,49 @@ export default function CalendarModal({
   // 수정 모드 데이터 채우기
   // ======================================
 
-  useEffect(() => {
+useEffect(() => {
 
-    if (!event) return;
+  if (!open) return;
+
+  // ============================
+  // 등록 모드
+  // ============================
+
+  if (mode === "create") {
+
+    setTitle("");
+    setStartDate("");
+    setEndDate("");
+    setStartTime("");
+    setEndTime("");
+    setLocation("");
+    setDescription("");
+
+    return;
+  }
+
+  // ============================
+  // 수정 모드
+  // ============================
+
+  if (mode === "edit" && event) {
 
     setTitle(event.title);
-
     setStartDate(event.startDate);
-
     setEndDate(event.endDate);
 
     const time = event.time.split("~");
 
     setStartTime(time[0]?.trim() || "");
-
     setEndTime(time[1]?.trim() || "");
 
     setLocation(event.location);
-
     setDescription(event.description || "");
 
-  }, [event]);
+  }
+
+}, [open, mode, event]);
+
 
   if (!open) return null;
 

@@ -146,8 +146,8 @@ useState<CalendarEvent|null>(null);
             <button
               className="calendar-register-btn"
               onClick={() => {
-                setModalMode("create");
                 setSelectedEvent(null);
+                setModalMode("create");
                 setIsModalOpen(true);
             }}
             >

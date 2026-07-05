@@ -298,7 +298,7 @@ background:#4F3428;
 
 .react-calendar__tile {
   position: relative;
-  height:clamp(90px,10vw,120px);
+  height:clamp(110px, 10vw,120px);
   padding: 0 !important;
   border: 1px solid #EFE7DD;
   background: white;
