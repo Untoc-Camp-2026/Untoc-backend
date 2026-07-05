@@ -51,7 +51,7 @@ export default function Header({ isLogin = false }: HeaderProps) {
                   </button>
 
                   {showUntoc && (
-                    <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1">
+                    <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg pt-1">
                       <Link href="/untoc/about" className="block px-4 py-3 hover:bg-[#FFFDF5] transition-colors">
                         소개
                       </Link>
@@ -82,7 +82,7 @@ export default function Header({ isLogin = false }: HeaderProps) {
                   </button>
 
                   {showCamp && (
-                    <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1">
+                    <div className="absolute top-full left-0 w-36 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg pt-1">
                       <Link href="/untoc-camp/about" className="block px-4 py-3 hover:bg-[#FFFDF5] transition-colors">
                         소개
                       </Link>
@@ -119,7 +119,7 @@ export default function Header({ isLogin = false }: HeaderProps) {
                   </button>
 
                   {showBoard && (
-                    <div className="absolute top-full left-0 w-44 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg mt-1 flex flex-col">
+                    <div className="absolute top-full left-0 w-44 overflow-hidden rounded-xl border border-[#E8E0D5] bg-white shadow-lg pt-1 flex flex-col">
                       {/* 👇 href 파라미터 적용 */}
                       <Link href="/board?category=FREE" className="flex items-center gap-3 px-5 py-3.5 hover:bg-[#FFFDF5] transition-colors">
                         <span className="text-lg">💬</span> 자유게시판
