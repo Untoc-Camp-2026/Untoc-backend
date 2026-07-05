@@ -23,7 +23,7 @@ export default function CalendarPage() {
   // const isAdmin = user.role === "ADMIN";
   // ======================================
 
-  const isAdmin = true;
+  const isAdmin = false; //true일때 일정 등록하기 버튼 뜸. 프론트엔드 테스트 시 const admin값을 true로 해두고 일정 등록 확인해보기
 
   // ======================================
   // 선택 날짜
