@@ -23,7 +23,7 @@ export default function CalendarPage() {
   // const isAdmin = user.role === "ADMIN";
   // ======================================
 
-  const isAdmin = false; //true일때 일정 등록하기 버튼 뜸. 프론트엔드 테스트 시 const admin값을 true로 해두고 일정 등록 확인해보기
+  const isAdmin = true; //true일때 일정 등록하기 버튼 뜸. 프론트엔드 테스트 시 const admin값을 true로 해두고 일정 등록 확인해보기
 
   // ======================================
   // 선택 날짜
@@ -83,26 +83,34 @@ export default function CalendarPage() {
   // 선택된 날짜 일정
   // ======================================
 
-  const selectedEvents = useMemo(() => {
+const selectedEvents = useMemo(() => {
 
-    return events.filter(
-      (event) =>
-        event.startDate === formatDate(selectedDate)
+  const target = formatDate(selectedDate);
+
+  return events.filter((event) => {
+
+    return (
+      target >= event.startDate &&
+      target <= event.endDate
     );
 
-  }, [selectedDate, events]);
+  });
+
+}, [selectedDate, events]);
 
   // ======================================
   // 날짜별 일정
   // ======================================
 
   const getEventsByDate = (date: Date) => {
+    const target = formatDate(date);
 
-    return events.filter(
-      (event) =>
-        event.startDate === formatDate(date)
-    );
-
+    return events.filter((event) => {
+      return (
+        target >= event.startDate &&
+        target <= event.endDate
+      );
+    });
   };
 
   const [modalMode, setModalMode] =

@@ -91,6 +91,11 @@ useEffect(() => {
 
   const handleSave = () => {
 
+    if (!title || !startDate || !endDate) {
+      alert("필수 항목(*)을 모두 입력해주세요.");
+      return;
+    }
+
     const newEvent: CalendarEvent = {
 
       id: event?.id ?? Date.now(),
@@ -147,7 +152,10 @@ useEffect(() => {
 
           {/* 제목 */}
           <div className="calendar-form-group">
-            <label>일정 제목</label>
+            <label>
+              일정 제목
+              <span className="required">*</span>
+            </label>
 
             <input
               type="text"
@@ -161,7 +169,10 @@ useEffect(() => {
           <div className="calendar-form-row">
 
             <div className="calendar-form-group">
-              <label>시작 날짜</label>
+              <label>
+              시작 날짜 
+              <span className="required">*</span>
+            </label>
 
               <input
                 type="date"
@@ -186,7 +197,10 @@ useEffect(() => {
           <div className="calendar-form-row">
 
             <div className="calendar-form-group">
-              <label>종료 날짜</label>
+              <label>
+              종료 날짜
+              <span className="required">*</span>
+            </label>
 
               <input
                 type="date"

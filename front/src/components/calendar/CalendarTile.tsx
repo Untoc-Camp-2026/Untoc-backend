@@ -20,14 +20,24 @@ export default function CalendarTile({
       {/* 일정 */}
       <div className="calendar-events">
 
-        {events.slice(0, 2).map((event)=> (
-          <div
-            key={event.id}
-            className="calendar-event"
-          >
-            {event.title}
-          </div>
-        ))}
+        {events.slice(0, 2).map((event) => {
+
+          const isLong =
+            event.startDate !== event.endDate;
+
+          return (
+            <div
+              key={event.id}
+              className={`calendar-event ${
+                isLong ? "calendar-event-long" : ""
+              }`}
+            >
+              {isLong ? "📅 " : ""}
+              {event.title}
+            </div>
+          );
+
+        })}
 
         {events.length > 2 && (
           <div className="calendar-more">

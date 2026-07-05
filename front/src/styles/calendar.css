@@ -414,6 +414,14 @@ background:#4F3428;
   text-overflow: ellipsis;
 }
 
+.calendar-event-long{
+
+    background:#D9ECFF;
+
+    color:#2E5D8A;
+
+}
+
 
 
 .calendar-more{
