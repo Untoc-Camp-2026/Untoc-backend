@@ -25,10 +25,10 @@ export default function UntocCampPage() {
   const rotations = ['rotate-2', '-rotate-3', 'rotate-1', '-rotate-2', 'rotate-3', '-rotate-1'];
 
   return (
-    <main className="min-h-screen bg-[#FDF8EB]">
+    <main className="flex flex-col min-h-screen bg-[#FDF8EB]">
       <Navbar />
       
-      <div className="max-w-6xl mx-auto px-6">
+      <div className="flex-grow w-full max-w-6xl mx-auto px-6">
         <h1 className="text-4xl font-bold text-[#6D4E48] mb-8 mt-12">UNTOC 활동 사진</h1>
 
         {/* 학기 선택 드롭다운 */}

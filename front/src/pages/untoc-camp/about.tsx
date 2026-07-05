@@ -6,10 +6,10 @@ import Footer from '../../components/layout/Footer';
 
 export default function UntocCampPage() {
   return (
-    <div className="min-h-screen bg-[#FDFAF5]">
+    <div className="flex flex-col min-h-screen bg-[#FDFAF5]">
       <Navbar />
 
-      <main className="pb-24">
+      <main className="flex-grow w-full max-w-6xl mx-auto pb-24">
         {/* 상단 뱃지 */}
         <div className="flex justify-center py-4">
           <h6 className="text-[#6B4E48] inline-flex items-center gap-2 px-5 py-1.5 bg-[#F7D988] rounded-full mb-3 text-xs font-extrabold tracking-widest">

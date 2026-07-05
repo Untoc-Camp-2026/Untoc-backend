@@ -3,11 +3,11 @@ import Footer from "@/components/layout/Footer";
 
 export default function Home() {
   return (
-    <>
+    <div className="flex flex-col min-h-screen">
       <Header />
 
       <main
-        className="relative flex h-[840px] items-center justify-center overflow-hidden"
+        className="relative flex flex-col flex-grow items-center justify-center overflow-hidden"
         style={{
           background: `
             radial-gradient(circle at 85% 20%, rgba(247, 217, 136, 0.28), transparent 30%),
@@ -32,6 +32,6 @@ export default function Home() {
       </main>
 
       <Footer />
-    </>
+    </div>
   );
 }
