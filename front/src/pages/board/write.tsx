@@ -1,14 +1,11 @@
 // front/src/pages/board/write.tsx
 import { useState } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { BoardCategory, BoardCategoryLabel } from '@/types/board';
 import { createPost } from '@/api/board';
 
-// 디자인 자산
-import untocLogo from '@/assets/images/언톡_스티커.webp';
 import fileIcon from '@/assets/images/chumboofile.png';
 
 export default function BoardWrite() {
@@ -17,9 +14,14 @@ export default function BoardWrite() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (submitting) return;
+
+    setSubmitting(true);
     try {
       await createPost({
         category,
@@ -31,7 +33,9 @@ export default function BoardWrite() {
       router.push('/board');
     } catch (error) {
       console.error('글쓰기 실패:', error);
-      alert('게시글 등록에 실패했습니다.');
+      alert('게시글 등록에 실패했습니다. 로그인 상태를 확인해주세요.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -112,9 +116,10 @@ export default function BoardWrite() {
               
               <button 
                 type="submit" 
+                disabled={submitting}
                 className="px-8 py-3 rounded-full bg-[#F7D988] text-[#6B4E48] font-extrabold hover:bg-[#E5C77A] transition-colors shadow-sm"
               >
-                완료
+                {submitting ? '등록 중...' : '완료'}
               </button>
             </div>
             

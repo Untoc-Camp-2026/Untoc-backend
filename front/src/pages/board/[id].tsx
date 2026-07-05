@@ -2,27 +2,29 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import Link from 'next/link';
 import { getPostDetail, deletePost, createComment, deleteComment } from '@/api/board';
-import { BoardCategoryLabel } from '@/types/board';
+import { BoardCategoryLabel, PostDetail } from '@/types/board';
 
 export default function PostDetail() {
   const router = useRouter();
   const { id } = router.query;
   
-  const [post, setPost] = useState<any>(null);
+  const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
+
+  const boardId = Number(id);
   
   // 댓글 입력 상태
   const [commentInput, setCommentInput] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
 
   useEffect(() => {
-    if (!id) return;
+    if (!id || Number.isNaN(boardId)) return;
+
     const fetchDetail = async () => {
       setLoading(true);
       try {
-        const data = await getPostDetail(Number(id));
+        const data = await getPostDetail(boardId);
         setPost(data);
       } catch (error) {
         console.error('상세 정보 로드 실패:', error);
@@ -30,14 +32,15 @@ export default function PostDetail() {
         setLoading(false);
       }
     };
+
     fetchDetail();
-  }, [id]);
+  }, [id, boardId]);
 
   // 게시글 삭제
   const handleDeletePost = async () => {
     if (!confirm('정말 이 게시글을 삭제하시겠습니까?')) return;
     try {
-      await deletePost(Number(id));
+      await deletePost(boardId);
       alert('게시글이 삭제되었습니다.');
       router.push('/board'); // 목록으로 이동
     } catch (error) {
@@ -48,12 +51,14 @@ export default function PostDetail() {
   // 댓글 등록
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!commentInput.trim()) return;
+    if (!commentInput.trim() || !post) return;
+
     try {
-      await createComment(Number(id), commentInput, isAnonymous);
-      alert('댓글이 등록되었습니다. (더미)');
+      await createComment(boardId, commentInput.trim(), isAnonymous);
+      const latest = await getPostDetail(boardId);
+      setPost(latest);
+      alert('댓글이 등록되었습니다.');
       setCommentInput(''); // 입력창 초기화
-      // 실제로는 여기서 getPostDetail을 다시 호출하여 댓글 목록을 갱신합니다.
     } catch (error) {
       alert('댓글 등록 실패');
     }
@@ -64,7 +69,9 @@ export default function PostDetail() {
     if (!confirm('댓글을 삭제하시겠습니까?')) return;
     try {
       await deleteComment(commentId);
-      alert('댓글이 삭제되었습니다. (더미)');
+      const latest = await getPostDetail(boardId);
+      setPost(latest);
+      alert('댓글이 삭제되었습니다.');
     } catch (error) {
       alert('댓글 삭제 실패');
     }
@@ -152,7 +159,7 @@ export default function PostDetail() {
         </form>
 
         {/* 댓글 목록 리스트 */}
-        {post.comments?.map((comment: any) => (
+        {post.comments?.map((comment) => (
           <div 
             key={comment.comment_id} 
             className="bg-white rounded-[20px] border border-[#E8E0D5] p-4 px-6 flex items-center justify-between shadow-sm"
