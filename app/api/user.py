@@ -2,12 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from core.database import get_db  
 from services.user import authenticate_user, create_user
-from core.security import create_access_token
+from core.security import create_access_token, SECRET_KEY, ALGORITHM, get_password_hash, verify_password
 from schemas.user import Token  
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
+from models.user import User
+from sqlalchemy.future import select
+from jose import JWTError, jwt
+
+from fastapi import UploadFile, File
+import os
+import shutil
+import uuid
+import pandas as pd
+import io
 
 router = APIRouter()
 
@@ -18,9 +28,8 @@ class UserCreate(BaseModel):
     user_id: str
     password: str
     name: str
-    generation: int
+    generation: float
     role: Optional[RoleEnum] = None
-
 class UserProfileUpdate(BaseModel):
     introduction: Optional[str] = None
 
@@ -30,6 +39,26 @@ class UserPasswordUpdate(BaseModel):
 class ProfileImageUpdate(BaseModel):
     profile_image_url: str
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
+async def get_current_user(token: str= Depends(oauth2_scheme), db: AsyncSession = Depends(get_db)):
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="토큰이 올바르지 않습니다.",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        user_id:str = payload.get("sub")
+        if user_id is None:
+            raise credentials_exception
+    except JWTError:
+        raise credentials_exception
+    stmt = select(User).where(User.user_id == user_id)
+    result = await db.execute(stmt)
+    user = result.scalars().first()
+
+    if user is None:
+        raise credentials_exception
+    return user
 @router.post("/login")
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(), 
@@ -69,7 +98,6 @@ async def test_login(token: str = Depends(oauth2_scheme)):
     return {
         "message": "로그인 성공!",
         "token": token
-    }
     }
 
 @router.put("/me/profile")

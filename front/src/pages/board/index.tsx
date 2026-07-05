@@ -1,28 +1,22 @@
-// front/src/pages/board/index.tsx
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import { useRouter } from 'next/router';
+import Link from 'next/link';
+import Image from 'next/image';
 import { BoardCategory, Post } from '@/types/board';
 import { getPosts } from '@/api/board';
 
+// 분리한 도메인 종속 컴포넌트 불러오기
 import PostItem from '@/components/board/PostItem';
 import FloatingWriteBtn from '@/components/board/FloatingWriteBtn';
 
-// 💡 프로의 팁: 카테고리별 렌더링 정보를 객체(Dictionary)로 분리하여 관리
-const CATEGORY_INFO: Record<BoardCategory, { label: string; emoji: string }> = {
-  FREE: { label: '자유게시판', emoji: '💬' },
-  EXAM: { label: '시험게시판', emoji: '📝' },
-  STUDY: { label: '스터디게시판', emoji: '📚' },
-  JOB: { label: '취업게시판', emoji: '💼' },
-  GAME: { label: '게임게시판', emoji: '🎮' },
-};
+// 로고 이미지 자산
+import untocLogo from '@/assets/images/언톡_스티커.webp';
 
 export default function BoardList() {
-  const router = useRouter();
-  
   const [currentCategory, setCurrentCategory] = useState<BoardCategory>('FREE');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
@@ -30,18 +24,6 @@ export default function BoardList() {
   const postsPerPage = 10;
   const totalPages = Math.ceil(totalCount / postsPerPage) || 1;
 
-  // 1. 라우터에서 카테고리를 감지하여 상태 업데이트
-  useEffect(() => {
-    if (router.isReady) {
-      const queryCategory = router.query.category as BoardCategory;
-      if (queryCategory && CATEGORY_INFO[queryCategory]) {
-        setCurrentCategory(queryCategory);
-        setCurrentPage(1); // 카테고리가 바뀌면 1페이지로 초기화
-      }
-    }
-  }, [router.isReady, router.query.category]);
-
-  // 2. 카테고리 변경 시 데이터 패칭
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
@@ -76,21 +58,46 @@ export default function BoardList() {
     if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
   };
 
-  // 현재 화면에 띄울 라벨과 이모지 추출
-  const { label, emoji } = CATEGORY_INFO[currentCategory];
-
   return (
-    <div className="w-full flex flex-col relative pb-24">
+    <div className="min-h-screen bg-[#FFFDF5] text-[#6B4E48] font-sans flex flex-col relative pb-24">
       <Head>
-        <title>{label} - UNTOC</title>
+        <title>자유게시판 - UNTOC</title>
       </Head>
 
+      {/* 상단 GNB */}
+      <header className="w-full h-20 flex items-center justify-between px-8 md:px-16 bg-white border-b border-[#E8E0D5]">
+        <Link href="/" className="flex items-center gap-3">
+          <Image src={untocLogo} alt="UNTOC 로고" width={45} height={45} className="object-contain" />
+          <span className="text-xl font-extrabold tracking-widest text-[#6B4E48]">UNTOC</span>
+        </Link>
+
+        <nav className="flex items-center gap-8 font-bold text-base">
+          <Link href="/board" className="text-[#6B4E48] border-b-2 border-[#6B4E48] pb-1">
+            게시판
+          </Link>
+          <Link href="/calendar" className="text-[#A3918D] hover:text-[#6B4E48] transition-colors">
+            캘린더
+          </Link>
+          <Link href="/attendance" className="text-[#A3918D] hover:text-[#6B4E48] transition-colors">
+            출석
+          </Link>
+          <Link href="/mypage" className="text-[#A3918D] hover:text-[#6B4E48] transition-colors">
+            마이페이지
+          </Link>
+          <span className="text-[#E8E0D5]">|</span>
+          <Link href="/logout" className="text-[#6B4E48] hover:text-black flex items-center gap-1">
+            <span>[→ 로그아웃</span>
+          </Link>
+        </nav>
+      </header>
+
+      {/* 본문 컨텐츠 영역 */}
       <main className="flex-1 flex flex-col items-center w-full max-w-4xl mx-auto px-4 py-12 gap-6">
         
-        {/* 💡 동적 타이틀 렌더링 (클릭한 메뉴에 맞게 이모지와 텍스트 변경) */}
-        <div className="flex items-center gap-3 text-4xl font-extrabold text-[#6B4E48]">
-          <span className="text-3xl">{emoji}</span>
-          <h1>{label}</h1>
+        {/* 타이틀 */}
+        <div className="flex items-center gap-2 text-4xl font-extrabold text-[#6B4E48]">
+          <h1>자유게시판</h1>
+          <span className="text-3xl">💬</span>
         </div>
 
         {/* 검색바 */}
@@ -112,7 +119,7 @@ export default function BoardList() {
           </button>
         </form>
 
-        {/* 게시글 목록 카드 리스트 */}
+        {/* 게시글 목록 카드 리스트 (분리한 PostItem 적용) */}
         <div className="w-full max-w-3xl flex flex-col gap-3.5 mt-4">
           {loading ? (
             <div className="text-center py-20 text-[#A3918D] font-bold">로딩 중...</div>
