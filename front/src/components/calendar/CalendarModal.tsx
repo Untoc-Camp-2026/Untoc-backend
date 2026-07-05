@@ -1,122 +1,234 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { CalendarEvent } from "@/types/calendar";
 
 interface CalendarModalProps {
   open: boolean;
+
+  mode: "create" | "edit";
+
+  event?: CalendarEvent | null;
+
   onClose: () => void;
 
   // ======================================
-  // TODO : 백엔드 연결 시
-  // 저장 API 호출
+  // TODO : 백엔드 연결
+  // index.tsx에서 API 호출
   // ======================================
-  onSave?: (event: CalendarEvent) => void;
+  onSave: (event: CalendarEvent) => void;
 }
 
 export default function CalendarModal({
   open,
+  mode,
+  event,
   onClose,
   onSave,
 }: CalendarModalProps) {
+
   const [title, setTitle] = useState("");
+
   const [startDate, setStartDate] = useState("");
+
   const [endDate, setEndDate] = useState("");
 
   const [startTime, setStartTime] = useState("");
+
   const [endTime, setEndTime] = useState("");
 
   const [location, setLocation] = useState("");
+
   const [description, setDescription] = useState("");
+
+  // ======================================
+  // 수정 모드 데이터 채우기
+  // ======================================
+
+  useEffect(() => {
+
+    if (!event) return;
+
+    setTitle(event.title);
+
+    setStartDate(event.startDate);
+
+    setEndDate(event.endDate);
+
+    const time = event.time.split("~");
+
+    setStartTime(time[0]?.trim() || "");
+
+    setEndTime(time[1]?.trim() || "");
+
+    setLocation(event.location);
+
+    setDescription(event.description || "");
+
+  }, [event]);
 
   if (!open) return null;
 
   const handleSave = () => {
+
     const newEvent: CalendarEvent = {
-      id: Date.now(),
+
+      id: event?.id ?? Date.now(),
+
       title,
+
       startDate,
+
       endDate,
+
       time: `${startTime} ~ ${endTime}`,
+
       location,
+
       description,
+
     };
 
-    // TODO : 백엔드 연결
-    onSave?.(newEvent);
+    onSave(newEvent);
 
-    onClose();
   };
 
   return (
-    <div className="calendar-modal-overlay">
 
-      <div className="calendar-modal">
+    <div
+      className="calendar-modal-overlay"
+      onClick={onClose}
+    >
 
-        <h2>일정 등록</h2>
+      <div
+        className="calendar-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
 
-        <label>일정 제목</label>
-        <input
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        />
+        <div className="calendar-modal-header">
 
-        <label>시작 날짜</label>
-        <input
-          type="date"
-          value={startDate}
-          onChange={(e) => setStartDate(e.target.value)}
-        />
+          <h2>
 
-        <label>종료 날짜</label>
-        <input
-          type="date"
-          value={endDate}
-          onChange={(e) => setEndDate(e.target.value)}
-        />
+            {mode === "create"
+              ? "일정 등록"
+              : "일정 수정"}
 
-        <label>시작 시간</label>
-        <input
-          type="time"
-          value={startTime}
-          onChange={(e) => setStartTime(e.target.value)}
-        />
-
-        <label>종료 시간</label>
-        <input
-          type="time"
-          value={endTime}
-          onChange={(e) => setEndTime(e.target.value)}
-        />
-
-        <label>장소</label>
-        <input
-          value={location}
-          onChange={(e) => setLocation(e.target.value)}
-        />
-
-        <label>상세 설명</label>
-
-        <textarea
-          rows={5}
-          value={description}
-          onChange={(e) =>
-            setDescription(e.target.value)
-          }
-        />
-
-        <div className="calendar-modal-buttons">
+          </h2>
 
           <button
+            className="calendar-close-btn"
             onClick={onClose}
-            className="cancel-btn"
+          >
+            ✕
+          </button>
+
+        </div>
+        <div className="calendar-form">
+
+          {/* 제목 */}
+          <div className="calendar-form-group">
+            <label>일정 제목</label>
+
+            <input
+              type="text"
+              placeholder="일정 제목을 입력하세요."
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          {/* 시작 */}
+          <div className="calendar-form-row">
+
+            <div className="calendar-form-group">
+              <label>시작 날짜</label>
+
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+              />
+            </div>
+
+            <div className="calendar-form-group">
+              <label>시작 시간</label>
+
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+              />
+            </div>
+
+          </div>
+
+          {/* 종료 */}
+          <div className="calendar-form-row">
+
+            <div className="calendar-form-group">
+              <label>종료 날짜</label>
+
+              <input
+                type="date"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+              />
+            </div>
+
+            <div className="calendar-form-group">
+              <label>종료 시간</label>
+
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+              />
+            </div>
+
+          </div>
+
+          {/* 장소 */}
+          <div className="calendar-form-group">
+            <label>장소</label>
+
+            <input
+              type="text"
+              placeholder="장소를 입력하세요."
+              value={location}
+              onChange={(e) => setLocation(e.target.value)}
+            />
+          </div>
+
+          {/* 설명 */}
+          <div className="calendar-form-group">
+            <label>상세 설명</label>
+
+            <textarea
+              rows={5}
+              placeholder="상세 설명을 입력하세요."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+        </div>
+
+        {/* 버튼 */}
+
+        <div className="calendar-modal-footer">
+
+          <button
+            className="calendar-cancel-btn"
+            onClick={onClose}
           >
             취소
           </button>
 
           <button
+            className="calendar-save-btn"
             onClick={handleSave}
-            className="save-btn"
           >
-            저장
+            {mode === "create"
+              ? "등록"
+              : "수정"}
           </button>
 
         </div>
@@ -124,5 +236,7 @@ export default function CalendarModal({
       </div>
 
     </div>
+
   );
+
 }
