@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Cropper from 'react-easy-crop';
 import Navbar from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
@@ -47,6 +48,16 @@ async function getCroppedImg(imageSrc: string, pixelCrop: { x: number; y: number
 // --------------------------------------------------
 
 export default function MyPage() {
+  const router = useRouter();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      router.replace('/login');
+      alert('회원 전용 페이지입니다. 로그인 페이지로 이동합니다.');
+    }
+  }, [isLoggedIn, router]);
+
   const [viewMode, setViewMode] = useState<'intro' | 'upload'>('intro');
 
   // 프로필 변경 및 자르기 상태 관리
@@ -144,6 +155,9 @@ export default function MyPage() {
       console.error('이미지 자르기 실패:', e);
     }
   };
+  if (!isLoggedIn) {
+    return null; // 로그인 상태가 아니면 아무것도 렌더링하지 않음
+  }
 
   return (
     <div className="flex flex-col min-h-screen bg-[#FDFAF5]">
