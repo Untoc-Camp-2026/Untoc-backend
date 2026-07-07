@@ -23,7 +23,7 @@ export default function Header({ isLogin, isAdmin }: HeaderProps) {
       <div className="flex h-24 items-center justify-between px-12">
 
         {/* Logo */}
-        <Link href="/">
+        <Link href={auth.isLoggedIn ? "/main" : "/"}>
           <Image
             src={Logo}
             alt="UNTOC Logo"

@@ -1,14 +1,17 @@
+import { useAuth } from "@/contexts/AuthContext"; // 인증 컨텍스트 임포트
 import Link from "next/link";
 import Image from "next/image";
 import Logo from "@/assets/images/untoc_logo.svg";
 
 export default function Footer() {
+  const auth = useAuth(); // 💡 로그인 상태 가져오기
+
   return (
     <footer className="border-t border-[#FAEDBE] bg-[#E8E0D3]">
       <div className="mx-auto flex max-w-7xl flex-col items-center py-4">
 
         {/* Logo */}
-        <Link href="/">
+        <Link href={auth.isLoggedIn ? "/main" : "/"}>
           <Image
             src={Logo}
             alt="UNTOC Logo"

@@ -11,6 +11,15 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Pagination } from '@/components/common/Pagination';
 
+// 💡 카테고리별 아이콘 매핑 객체 추가
+const BoardCategoryIcon: Record<BoardCategory, string> = {
+  FREE: '💬',
+  EXAM: '📝',
+  STUDY: '📚',
+  JOB: '💼',
+  GAME: '🎮',
+};
+
 export default function BoardList() {
   const router = useRouter();
   const [currentCategory, setCurrentCategory] = useState<BoardCategory>('FREE');
@@ -76,8 +85,9 @@ export default function BoardList() {
         
         {/* 타이틀 */}
         <div className="flex items-center gap-2 text-4xl font-extrabold text-[#6B4E48]">
+          {/* 💡 고정된 이모지 대신 매핑된 아이콘을 출력하도록 수정 */}
+          <span className="text-3xl">{BoardCategoryIcon[currentCategory]}</span>
           <h1>{BoardCategoryLabel[currentCategory]}게시판</h1>
-          <span className="text-3xl">💬</span>
         </div>
 
         {/* 검색바 */}
