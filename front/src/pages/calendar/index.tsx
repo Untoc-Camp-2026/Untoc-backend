@@ -7,6 +7,7 @@ import Footer from "@/components/layout/Footer";
 import CalendarTile from "@/components/calendar/CalendarTile";
 import CalendarDetail from "@/components/calendar/CalendarDetail";
 import CalendarModal from "@/components/calendar/CalendarModal";
+import { useAuth } from "@/contexts/AuthContext";
 
 import type { CalendarEvent } from "@/types/calendar";
 
@@ -17,13 +18,8 @@ const Calendar = dynamic(() => import("react-calendar"), {
 });
 
 export default function CalendarPage() {
-
-  // ======================================
-  // TODO : 백엔드 로그인 연결 시 수정
-  // const isAdmin = user.role === "ADMIN";
-  // ======================================
-
-  const isAdmin = true; //true일때 일정 등록하기 버튼 뜸. 프론트엔드 테스트 시 const admin값을 true로 해두고 일정 등록 확인해보기
+  const auth = useAuth();
+  const isAdmin = auth.isAdmin;
 
   // ======================================
   // 선택 날짜
@@ -127,7 +123,7 @@ useState<CalendarEvent|null>(null);
       {/* ===============================
           Header
       =============================== */}
-      <Header isLogin={true} />
+      <Header />
 
       <main className="calendar-page">
         {/* ===============================
@@ -203,7 +199,7 @@ useState<CalendarEvent|null>(null);
 
               calendarType="gregory"
 
-              onChange={(value) => {
+              onChange={(value: Date | Date[] | null) => {
                 if (value instanceof Date) {
                   setSelectedDate(value);
                 }
@@ -211,13 +207,13 @@ useState<CalendarEvent|null>(null);
 
               formatDay={() => ""}
 
-              formatShortWeekday={(locale, date) =>
+              formatShortWeekday={(_locale: string | undefined, date: Date) =>
                 ["일", "월", "화", "수", "목", "금", "토"][
                   date.getDay()
                 ]
               }
 
-              tileContent={({ date }) => (
+              tileContent={({ date }: { date: Date }) => (
                 <CalendarTile
                   date={date}
                   events={getEventsByDate(date)}

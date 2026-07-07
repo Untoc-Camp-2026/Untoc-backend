@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { BoardCategory, Post } from '@/types/board';
 import { getPosts } from '@/api/board';
+import { useAuth } from '@/contexts/AuthContext';
 
 // 분리한 도메인 종속 컴포넌트 불러오기
 import PostItem from '@/components/board/PostItem';
@@ -15,6 +16,7 @@ import untocLogo from '@/assets/images/언톡_스티커.webp';
 
 export default function BoardList() {
   const router = useRouter();
+  const auth = useAuth();
   const [currentCategory, setCurrentCategory] = useState<BoardCategory>('FREE');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -100,9 +102,15 @@ export default function BoardList() {
             마이페이지
           </Link>
           <span className="text-[#E8E0D5]">|</span>
-          <Link href="/logout" className="text-[#6B4E48] hover:text-black flex items-center gap-1">
-            <span>[→ 로그아웃</span>
-          </Link>
+          {auth.isLoggedIn ? (
+            <Link href="/logout" className="text-[#6B4E48] hover:text-black flex items-center gap-1">
+              <span>[→ 로그아웃</span>
+            </Link>
+          ) : (
+            <Link href="/login" className="text-[#6B4E48] hover:text-black flex items-center gap-1">
+              <span>[→ 로그인</span>
+            </Link>
+          )}
         </nav>
       </header>
 

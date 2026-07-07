@@ -2,11 +2,14 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
-import { getPostDetail, deletePost, createComment, deleteComment } from '@/api/board';
-import { BoardCategoryLabel, PostDetail } from '@/types/board';
+import { getPostDetail, deletePost, createComment, updateComment, deleteComment } from '@/api/board';
+import { BoardCategoryLabel } from '@/types/board';
+import type { PostDetail } from '@/types/board';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function PostDetail() {
   const router = useRouter();
+  const auth = useAuth();
   const { id } = router.query;
   
   const [post, setPost] = useState<PostDetail | null>(null);
@@ -17,6 +20,17 @@ export default function PostDetail() {
   // 댓글 입력 상태
   const [commentInput, setCommentInput] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(true);
+  const [editingCommentId, setEditingCommentId] = useState<number | null>(null);
+  const [editContent, setEditContent] = useState('');
+
+  const canManagePost = Boolean(post && (post.is_owner || auth.isAdmin));
+  const canManageComment = (commentOwner: boolean) => commentOwner || auth.isAdmin;
+
+  const refreshPostDetail = async () => {
+    if (Number.isNaN(boardId)) return;
+    const latest = await getPostDetail(boardId);
+    setPost(latest);
+  };
 
   useEffect(() => {
     if (!id || Number.isNaN(boardId)) return;
@@ -24,8 +38,7 @@ export default function PostDetail() {
     const fetchDetail = async () => {
       setLoading(true);
       try {
-        const data = await getPostDetail(boardId);
-        setPost(data);
+        await refreshPostDetail();
       } catch (error) {
         console.error('상세 정보 로드 실패:', error);
       } finally {
@@ -55,12 +68,37 @@ export default function PostDetail() {
 
     try {
       await createComment(boardId, commentInput.trim(), isAnonymous);
-      const latest = await getPostDetail(boardId);
-      setPost(latest);
+      await refreshPostDetail();
       alert('댓글이 등록되었습니다.');
       setCommentInput(''); // 입력창 초기화
     } catch (error) {
       alert('댓글 등록 실패');
+    }
+  };
+
+  // 댓글 수정 시작
+  const handleEditStart = (commentId: number, currentContent: string) => {
+    setEditingCommentId(commentId);
+    setEditContent(currentContent);
+  };
+
+  // 댓글 수정 취소
+  const handleEditCancel = () => {
+    setEditingCommentId(null);
+    setEditContent('');
+  };
+
+  // 댓글 수정 완료
+  const handleEditComplete = async (commentId: number, anonymous: boolean) => {
+    if (!editContent.trim()) return;
+
+    try {
+      await updateComment(commentId, editContent.trim(), anonymous);
+      await refreshPostDetail();
+      handleEditCancel();
+      alert('댓글이 수정되었습니다.');
+    } catch (error) {
+      alert('댓글 수정 실패');
     }
   };
 
@@ -69,8 +107,10 @@ export default function PostDetail() {
     if (!confirm('댓글을 삭제하시겠습니까?')) return;
     try {
       await deleteComment(commentId);
-      const latest = await getPostDetail(boardId);
-      setPost(latest);
+      await refreshPostDetail();
+      if (editingCommentId === commentId) {
+        handleEditCancel();
+      }
       alert('댓글이 삭제되었습니다.');
     } catch (error) {
       alert('댓글 삭제 실패');
@@ -101,10 +141,10 @@ export default function PostDetail() {
               {post.anonymous ? "익명" : post.user_id}
             </div>
             {/* 게시글 본인(또는 관리자)일 경우 수정/삭제 버튼 노출 */}
-            {post.is_owner && (
+            {canManagePost && (
               <div className="flex gap-2 text-sm font-bold">
                 <button 
-                  onClick={() => alert('수정 페이지로 이동 (예: /board/write?id=' + id + ')')}
+                  onClick={() => router.push(`/board/write?id=${post.board_id}`)}
                   className="px-3 py-1.5 bg-[#E8E0D5] text-[#6B4E48] rounded-[8px] hover:bg-[#D1C9BC] transition-colors"
                 >
                   수정
@@ -165,30 +205,57 @@ export default function PostDetail() {
             className="bg-white rounded-[20px] border border-[#E8E0D5] p-4 px-6 flex items-center justify-between shadow-sm"
           >
             {/* 좌측: 익명 프로필 원 + 댓글 내용 */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 flex-1 min-w-0">
               <div className="w-10 h-10 shrink-0 flex items-center justify-center bg-[#FFF9E6] rounded-full text-[#6B4E48] font-extrabold text-sm">
                 {comment.user_id}
               </div>
-              <span className="font-extrabold text-[#3A2E2B]">
-                {comment.content}
-              </span>
+              {editingCommentId === comment.comment_id ? (
+                <textarea
+                  value={editContent}
+                  onChange={(e) => setEditContent(e.target.value)}
+                  className="w-full min-h-[44px] px-3 py-2 rounded-[10px] border border-[#E8E0D5] outline-none focus:border-[#F7D988] text-[#3A2E2B] font-bold resize-none"
+                />
+              ) : (
+                <span className="font-extrabold text-[#3A2E2B] break-words">
+                  {comment.content}
+                </span>
+              )}
             </div>
 
             {/* 우측: 내 댓글일 경우에만 수정/삭제 버튼 표시 */}
-            {comment.is_owner && (
+            {canManageComment(comment.is_owner) && (
               <div className="flex items-center gap-2">
-                <button 
-                  onClick={() => alert('댓글 수정 기능 (구현 예정)')}
-                  className="px-5 py-2 bg-[#E8E0D5] text-[#6B4E48] font-extrabold rounded-[12px] hover:bg-[#D1C9BC] transition-colors"
-                >
-                  수정
-                </button>
-                <button 
-                  onClick={() => handleDeleteComment(comment.comment_id)}
-                  className="px-5 py-2 bg-[#E53E3E] text-white font-extrabold rounded-[12px] hover:bg-[#C53030] transition-colors"
-                >
-                  삭제
-                </button>
+                {editingCommentId === comment.comment_id ? (
+                  <>
+                    <button 
+                      onClick={handleEditCancel}
+                      className="px-5 py-2 bg-white border border-[#E8E0D5] text-[#A3918D] font-extrabold rounded-[12px] hover:bg-[#FFFDF5] transition-colors"
+                    >
+                      취소
+                    </button>
+                    <button 
+                      onClick={() => handleEditComplete(comment.comment_id, comment.anonymous)}
+                      className="px-5 py-2 bg-[#F7D988] text-[#6B4E48] font-extrabold rounded-[12px] hover:bg-[#E5C77A] transition-colors"
+                    >
+                      완료
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <button 
+                      onClick={() => handleEditStart(comment.comment_id, comment.content)}
+                      className="px-5 py-2 bg-[#E8E0D5] text-[#6B4E48] font-extrabold rounded-[12px] hover:bg-[#D1C9BC] transition-colors"
+                    >
+                      수정
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteComment(comment.comment_id)}
+                      className="px-5 py-2 bg-[#E53E3E] text-white font-extrabold rounded-[12px] hover:bg-[#C53030] transition-colors"
+                    >
+                      삭제
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </div>

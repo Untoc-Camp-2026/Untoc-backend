@@ -92,12 +92,16 @@ async def signup(user_data: UserCreate, db: AsyncSession = Depends(get_db)):
 
 
 
-#로그인 확인용
+# 로그인한 사용자 정보 조회
 @router.get("/me")
-async def test_login(token: str = Depends(oauth2_scheme)):
+async def get_me(current_user: User = Depends(get_current_user)):
     return {
-        "message": "로그인 성공!",
-        "token": token
+        "user_id": current_user.user_id,
+        "name": current_user.name,
+        "role": current_user.role,
+        "admin_status": current_user.admin_status,
+        "profile_image_url": current_user.profile_image_url,
+        "introduction": current_user.introduction,
     }
 
 @router.put("/me/profile")

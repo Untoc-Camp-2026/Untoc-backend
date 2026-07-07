@@ -2,24 +2,33 @@
 import { useState } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import Navbar from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function Login() {
   const router = useRouter();
+  const auth = useAuth();
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // TODO: 백엔드 API 연동 (src/api/auth.ts 활용)
-    console.log('로그인 시도:', { loginId, password });
-    
-    // 임시로 로그인 후 메인 대시보드로 이동
-    router.push('/main');
+
+    if (submitting) return;
+
+    setSubmitting(true);
+    try {
+      await auth.login(loginId, password);
+      router.push('/main');
+    } catch (error) {
+      console.error('로그인 실패:', error);
+      alert(error instanceof Error ? error.message : '로그인에 실패했습니다.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -61,9 +70,10 @@ export default function Login() {
             {/* 로그인 버튼 */}
             <button
               type="submit"
+              disabled={submitting}
               className="w-full mt-6 bg-[#6B4E48] hover:bg-[#E5C77A] text-[#FFFFFF] font-extrabold text-lg py-4 rounded-tr-[40px] rounded-bl-[40px] transition-colors shadow-sm"
             >
-              로그인
+              {submitting ? '로그인 중...' : '로그인'}
             </button>
 
           </form>

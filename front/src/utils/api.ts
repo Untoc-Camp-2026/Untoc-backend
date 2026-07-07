@@ -1,6 +1,6 @@
 // utils/api.ts
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 interface ApiClientOptions extends RequestInit {
   timeoutMs?: number;
