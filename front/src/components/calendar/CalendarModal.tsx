@@ -97,9 +97,8 @@ useEffect(() => {
     }
 
     const newEvent: CalendarEvent = {
-
-      id: event?.id ?? Date.now(),
-
+      id: event?.id ?? 0,
+      categoryId: event?.categoryId ?? 0,
       title,
 
       startDate,
