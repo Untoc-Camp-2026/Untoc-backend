@@ -197,7 +197,7 @@ export default function VisionChart() {
 
       {/* 설명 박스 */}
       {selected && (
-        <div className="w-[520px] h-[550px] rounded-2xl bg-[#FFF6CF] px-12 py-10 shadow-[0_0_45px_rgba(242,223,145,0.55)] transition-all duration-500">
+        <div className="w-[520px] min-h-[550px] rounded-2xl bg-[#FFF6CF] px-12 py-10 shadow-[0_0_45px_rgba(242,223,145,0.55)] transition-all duration-500">
             <p
                 className={`text-[#6B514A] text-2xl leading-[2.1] font-medium transition-opacity duration-300 ${
                     showText && !isRotating ? 'opacity-100' : 'opacity-0'

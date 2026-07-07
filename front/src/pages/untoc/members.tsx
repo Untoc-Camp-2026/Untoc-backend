@@ -75,21 +75,19 @@ export default function MembersPage() {
         {/* 1. 회장단 섹션: 별도로 명확히 분리 */}
     <section className="max-w-[1000px] mx-auto px-6 mb-32">
         <h2 className="text-center text-xl font-medium text-black mb-10">회장단</h2>
-        <div className="flex justify-center gap-10">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-x-20 gap-y-20 justify-items-center">
         {executiveMembers.map((member) => (
             <GlowingCard key={`exec-${member.name}`} member={member} />
         ))}
         </div>
     </section>
-
+    
     {/* 2. 기수 섹션: 기수별로 묶어서 배치 (중복 방지) */}
     <section className="max-w-[900px] mx-auto px-6">
+      <h2 className="text-center text-xl font-medium text-black mb-10">집행부</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-10 gap-y-20 justify-items-center">
         {generationMembers.map((member, index) => (
             <div key={`gen-${index}`} className="flex flex-col items-center">
-            <h2 className="text-center text-xl font-medium text-black mb-6">
-                {member.role}
-            </h2>
             <GlowingCard member={member} />
             </div>
         ))}
