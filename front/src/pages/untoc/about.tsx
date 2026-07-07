@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Image from 'next/image';
-import Forest from '../../assets/images/untoc_background.png';
+import Forest from '../../assets/images/history_background.png';
 import Navbar from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 import VisionChart from './chart';

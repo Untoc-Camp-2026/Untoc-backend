@@ -19,6 +19,8 @@ interface ProjectCardProps {
 }
 
 export default function ProjectCard({ project, onClick }: ProjectCardProps) {
+  const isColorPlaceholder = project.imgUrl.startsWith('#');
+
   return (
     <div
       className="group cursor-pointer bg-white rounded-[1.5rem] overflow-hidden shadow-sm border border-gray-50 flex flex-col h-full transition-transform duration-200 hover:-translate-y-1 hover:shadow-md"
@@ -32,11 +34,15 @@ export default function ProjectCard({ project, onClick }: ProjectCardProps) {
         </div>
 
         {/* 실제 이미지 */}
-        <img
-          src={project.imgUrl}
-          alt={project.title}
-          className="w-full h-full object-cover"
-        />
+        {isColorPlaceholder ? (
+          <div className="w-full h-full" style={{ backgroundColor: project.imgUrl }} />
+        ) : (
+          <img
+            src={project.imgUrl}
+            alt={project.title}
+            className="w-full h-full object-cover"
+          />
+        )}
       </div>
 
       {/* 텍스트 정보 영역 */}

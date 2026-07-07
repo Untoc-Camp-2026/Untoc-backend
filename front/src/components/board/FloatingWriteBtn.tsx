@@ -1,8 +1,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
-import writeBtnIcon from '@/assets/images/writeBTN.png';
+import writeBtnIcon from '@/assets/images/write_btn.svg';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function FloatingWriteBtn() {
+  const auth = useAuth();
+
+  if (!auth.isLoggedIn) {
+    return null;
+  }
+
   return (
     <Link 
       href="/board/write" 

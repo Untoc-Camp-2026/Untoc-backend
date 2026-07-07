@@ -1,7 +1,5 @@
-// front/src/pages/login/index.tsx
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Head from 'next/head';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import Navbar from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
@@ -13,6 +11,12 @@ export default function Login() {
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (auth.isHydrated && auth.isLoggedIn) {
+      router.replace('/main');
+    }
+  }, [auth.isHydrated, auth.isLoggedIn, router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

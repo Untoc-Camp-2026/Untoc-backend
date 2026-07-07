@@ -1,8 +1,10 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/router';
 import Navbar from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
+import { useAuth } from '@/contexts/AuthContext';
 
 // 테스트용 초기 부원 데이터 리스트
 const INITIAL_MEMBERS = [
@@ -16,11 +18,31 @@ const INITIAL_MEMBERS = [
 ];
 
 export default function AdminAttendancePage() {
+  const router = useRouter();
+  const auth = useAuth();
   const [date, setDate] = useState('2026-07-03'); // 디자인 합본 기준 기본값
   const [allowTime, setAllowTime] = useState('10'); // 기본 10분 설정
   const [attendanceCode, setAttendanceCode] = useState('------');
   const [isStarted, setIsStarted] = useState(false);
   const [members, setMembers] = useState(INITIAL_MEMBERS);
+
+  useEffect(() => {
+    if (!auth.isHydrated) return;
+
+    if (!auth.isLoggedIn) {
+      router.replace('/login');
+      return;
+    }
+
+    if (!auth.isAdmin) {
+      alert('관리자만 접근할 수 있는 페이지입니다.');
+      router.replace('/attendance/member');
+    }
+  }, [auth.isHydrated, auth.isLoggedIn, auth.isAdmin, router]);
+
+  if (!auth.isHydrated || !auth.isLoggedIn || !auth.isAdmin) {
+    return null;
+  }
 
   // 🎲 6자리 랜덤 출석 코드 생성 및 타이머 시작 로직
   const handleStartAttendance = () => {

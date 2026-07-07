@@ -1,11 +1,14 @@
-// front/src/pages/board/[id].tsx
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import Head from 'next/head';
+import Link from 'next/link';
 import { getPostDetail, deletePost, createComment, updateComment, deleteComment } from '@/api/board';
 import { BoardCategoryLabel } from '@/types/board';
 import type { PostDetail } from '@/types/board';
 import { useAuth } from '@/contexts/AuthContext';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import { resolveMediaUrl } from '@/utils/media';
 
 export default function PostDetail() {
   const router = useRouter();
@@ -14,6 +17,7 @@ export default function PostDetail() {
   
   const [post, setPost] = useState<PostDetail | null>(null);
   const [loading, setLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const boardId = Number(id);
   
@@ -37,10 +41,15 @@ export default function PostDetail() {
 
     const fetchDetail = async () => {
       setLoading(true);
+      setErrorMessage('');
       try {
         await refreshPostDetail();
       } catch (error) {
         console.error('상세 정보 로드 실패:', error);
+        setPost(null);
+        setErrorMessage(
+          error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.'
+        );
       } finally {
         setLoading(false);
       }
@@ -64,6 +73,11 @@ export default function PostDetail() {
   // 댓글 등록
   const handleCommentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!auth.isLoggedIn) {
+      alert('댓글 작성은 로그인 후 이용할 수 있습니다.');
+      router.push('/login');
+      return;
+    }
     if (!commentInput.trim() || !post) return;
 
     try {
@@ -117,12 +131,42 @@ export default function PostDetail() {
     }
   };
 
-  if (loading || !post) {
-    return <div className="min-h-screen pt-32 text-center text-[#A3918D] font-bold">로딩 중...</div>;
+  if (loading) {
+    return (
+      <div className="min-h-screen pt-32 text-center text-[#A3918D] font-bold">로딩 중...</div>
+    );
+  }
+
+  if (errorMessage || !post) {
+    return (
+      <div className="flex min-h-screen flex-col bg-[#FFFDF5]">
+        <Header />
+        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-4 py-24 text-center">
+          <p className="text-lg font-bold text-[#B04A4A]">
+            {errorMessage || '게시글을 찾을 수 없습니다.'}
+          </p>
+          {!auth.isLoggedIn && (
+            <button
+              type="button"
+              onClick={() => router.push('/login')}
+              className="rounded-full bg-[#F7D988] px-6 py-2 font-bold text-[#6B4E48]"
+            >
+              로그인하기
+            </button>
+          )}
+          <Link href="/board" className="text-sm font-bold text-[#6B4E48] underline">
+            게시판으로 돌아가기
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    );
   }
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-12 flex flex-col gap-8 pb-24">
+    <div className="flex min-h-screen flex-col bg-[#FFFDF5]">
+      <Header />
+      <div className="w-full max-w-4xl mx-auto px-4 py-12 flex flex-col gap-8 pb-24 flex-1">
       <Head>
         <title>{post.title} - UNTOC</title>
       </Head>
@@ -164,39 +208,74 @@ export default function PostDetail() {
         <div className="min-h-[200px] text-[#6B4E48] font-medium leading-relaxed whitespace-pre-wrap">
           {post.content}
         </div>
+
+        {post.file_url && (
+          <div className="mt-6 border-t border-[#E8E0D5] pt-4">
+            <a
+              href={resolveMediaUrl(post.file_url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-full border border-[#F7D988] bg-[#FFFDF5] px-4 py-2 text-sm font-bold text-[#6B4E48] hover:bg-[#F7D988]"
+            >
+              첨부파일 다운로드
+            </a>
+          </div>
+        )}
       </article>
 
       {/* 2. 댓글 영역 (올려주신 이미지 시안 100% 반영) */}
       <section className="flex flex-col gap-4">
         
         {/* 댓글 입력창 */}
-        <form 
-          onSubmit={handleCommentSubmit}
-          className="bg-white rounded-[20px] border border-[#E8E0D5] p-3 pl-6 flex items-center justify-between shadow-sm"
-        >
-          <input
-            type="text"
-            value={commentInput}
-            onChange={(e) => setCommentInput(e.target.value)}
-            placeholder="댓글을 입력하세요"
-            className="flex-1 outline-none text-[#6B4E48] font-bold placeholder:text-[#A3918D] bg-transparent"
-          />
-          <div className="flex items-center gap-2">
-            <button 
-              type="submit"
-              className="px-6 py-2.5 bg-[#F7D988] text-[#6B4E48] font-extrabold rounded-[12px] hover:bg-[#E5C77A] transition-colors"
-            >
-              등록
-            </button>
-            <button 
+        {auth.isLoggedIn ? (
+          <form 
+            onSubmit={handleCommentSubmit}
+            className="bg-white rounded-[20px] border border-[#E8E0D5] p-3 pl-6 flex items-center justify-between shadow-sm"
+          >
+            <input
+              type="text"
+              value={commentInput}
+              onChange={(e) => setCommentInput(e.target.value)}
+              placeholder="댓글을 입력하세요"
+              className="flex-1 outline-none text-[#6B4E48] font-bold placeholder:text-[#A3918D] bg-transparent"
+            />
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-1 text-xs font-bold text-[#8C8279]">
+                <input
+                  type="checkbox"
+                  checked={isAnonymous}
+                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                  className="accent-[#6B4E48]"
+                />
+                익명
+              </label>
+              <button 
+                type="submit"
+                className="px-6 py-2.5 bg-[#F7D988] text-[#6B4E48] font-extrabold rounded-[12px] hover:bg-[#E5C77A] transition-colors"
+              >
+                등록
+              </button>
+              <button 
+                type="button"
+                onClick={() => setCommentInput('')}
+                className="px-6 py-2.5 bg-white border border-[#E8E0D5] text-[#A3918D] font-extrabold rounded-[12px] hover:bg-[#FFFDF5] transition-colors"
+              >
+                취소
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="bg-white rounded-[20px] border border-[#E8E0D5] p-6 text-center shadow-sm">
+            <p className="text-[#8C8279] font-bold">댓글 작성은 로그인 후 이용할 수 있습니다.</p>
+            <button
               type="button"
-              onClick={() => setCommentInput('')}
-              className="px-6 py-2.5 bg-white border border-[#E8E0D5] text-[#A3918D] font-extrabold rounded-[12px] hover:bg-[#FFFDF5] transition-colors"
+              onClick={() => router.push('/login')}
+              className="mt-3 rounded-full bg-[#F7D988] px-5 py-2 text-sm font-bold text-[#6B4E48]"
             >
-              취소
+              로그인하기
             </button>
           </div>
-        </form>
+        )}
 
         {/* 댓글 목록 리스트 */}
         {post.comments?.map((comment) => (
@@ -262,6 +341,8 @@ export default function PostDetail() {
         ))}
         
       </section>
+      </div>
+      <Footer />
     </div>
   );
 }

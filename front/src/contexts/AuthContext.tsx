@@ -1,9 +1,14 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { login as loginRequest } from '@/api/auth';
-import type { AuthSession } from '@/types/auth';
+import { fetchCurrentUser, login as loginRequest } from '@/api/auth';
+import type { AuthSession, AuthRole } from '@/types/auth';
+import { AUTH_STORAGE_KEY, readStoredSession } from '@/utils/authStorage';
 
-const AUTH_STORAGE_KEY = 'untoc_auth_session';
+const resolveRole = (role: string | undefined, adminStatus: boolean): AuthRole => {
+  if (adminStatus) return 'ADMIN';
+  if (role === 'BACKEND' || role === 'FRONTEND') return 'MEMBER';
+  return 'MEMBER';
+};
 
 type AuthContextValue = {
   session: AuthSession | null;
@@ -16,19 +21,6 @@ type AuthContextValue = {
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
-
-const readSession = (): AuthSession | null => {
-  if (typeof window === 'undefined') return null;
-
-  const rawSession = window.localStorage.getItem(AUTH_STORAGE_KEY);
-  if (!rawSession) return null;
-
-  try {
-    return JSON.parse(rawSession) as AuthSession;
-  } catch {
-    return null;
-  }
-};
 
 const persistSession = (session: AuthSession | null) => {
   if (typeof window === 'undefined') return;
@@ -46,22 +38,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
-    setSession(readSession());
-    setIsHydrated(true);
+    const hydrateSession = async () => {
+      const storedSession = readStoredSession();
+      if (!storedSession?.accessToken) {
+        setSession(null);
+        setIsHydrated(true);
+        return;
+      }
+
+      try {
+        const profile = await fetchCurrentUser(storedSession.accessToken);
+        const refreshedSession: AuthSession = {
+          ...storedSession,
+          userId: profile.user_id || storedSession.userId,
+          name: profile.name ?? storedSession.name,
+          role: resolveRole(profile.role, Boolean(profile.admin_status)),
+          adminStatus: Boolean(profile.admin_status),
+          profileImageUrl: profile.profile_image_url ?? storedSession.profileImageUrl,
+          introduction: profile.introduction ?? storedSession.introduction,
+        };
+        setSession(refreshedSession);
+        persistSession(refreshedSession);
+      } catch {
+        persistSession(null);
+        setSession(null);
+      } finally {
+        setIsHydrated(true);
+      }
+    };
+
+    void hydrateSession();
   }, []);
 
-  const updateSession = (nextSession: AuthSession | null) => {
+  const updateSession = useCallback((nextSession: AuthSession | null) => {
     setSession(nextSession);
     persistSession(nextSession);
-  };
+  }, []);
 
-  const logout = () => updateSession(null);
+  const logout = useCallback(() => updateSession(null), [updateSession]);
 
-  const login = async (loginId: string, password: string) => {
+  const login = useCallback(async (loginId: string, password: string) => {
     const nextSession = await loginRequest(loginId, password);
     updateSession(nextSession);
     return nextSession;
-  };
+  }, [updateSession]);
 
   const value = useMemo<AuthContextValue>(() => ({
     session,
@@ -71,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     updateSession,
-  }), [isHydrated, session]);
+  }), [isHydrated, session, login, logout, updateSession]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

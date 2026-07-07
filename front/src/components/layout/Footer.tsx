@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import Logo from "@/assets/images/언톡_스티커.webp";
+import Logo from "@/assets/images/untoc_logo.svg";
 
 export default function Footer() {
   return (

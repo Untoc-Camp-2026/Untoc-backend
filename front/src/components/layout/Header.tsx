@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { useState } from "react";
-import Logo from "@/assets/images/언톡_스티커.webp";
+import Logo from "@/assets/images/untoc_logo.svg";
 import Image from "next/image";
 import { useAuth } from "@/contexts/AuthContext";
 

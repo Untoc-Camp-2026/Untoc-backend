@@ -1,16 +1,22 @@
-// front/src/pages/board/write.tsx
 import { useEffect, useMemo, useState } from 'react';
 import Head from 'next/head';
-import Image from 'next/image';
 import { useRouter } from 'next/router';
 import { BoardCategory, BoardCategoryLabel } from '@/types/board';
 import { createPost, getPostDetail, updatePost } from '@/api/board';
-
-import fileIcon from '@/assets/images/chumboofile.png';
+import { useAuth } from '@/contexts/AuthContext';
+import BoardFileAttachment from '@/components/board/BoardFileAttachment';
 
 export default function BoardWrite() {
   const router = useRouter();
+  const auth = useAuth();
   const rawId = router.query.id;
+
+  useEffect(() => {
+    if (auth.isHydrated && !auth.isLoggedIn) {
+      router.replace('/login');
+      alert('글쓰기는 로그인 후 이용할 수 있습니다.');
+    }
+  }, [auth.isHydrated, auth.isLoggedIn, router]);
 
   const boardId = useMemo(() => {
     if (typeof rawId !== 'string') return null;
@@ -24,6 +30,8 @@ export default function BoardWrite() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [isAnonymous, setIsAnonymous] = useState(false);
+  const [fileUrl, setFileUrl] = useState<string | null>(null);
+  const [fileName, setFileName] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [loadingPost, setLoadingPost] = useState(false);
 
@@ -38,6 +46,8 @@ export default function BoardWrite() {
         setTitle(post.title);
         setContent(post.content);
         setIsAnonymous(post.anonymous);
+        setFileUrl(post.file_url || null);
+        setFileName(post.file_url ? post.file_url.split('/').pop() || '첨부파일' : null);
       } catch (error) {
         console.error('게시글 수정 데이터 로드 실패:', error);
         alert('수정할 게시글 정보를 불러오지 못했습니다.');
@@ -63,6 +73,7 @@ export default function BoardWrite() {
           title,
           content,
           anonymous: isAnonymous,
+          file_url: fileUrl || undefined,
         });
         alert('게시글이 수정되었습니다!');
       } else {
@@ -71,6 +82,7 @@ export default function BoardWrite() {
           title,
           content,
           anonymous: isAnonymous,
+          file_url: fileUrl || undefined,
         });
         alert('게시글이 등록되었습니다!');
       }
@@ -82,6 +94,10 @@ export default function BoardWrite() {
       setSubmitting(false);
     }
   };
+
+  if (!auth.isHydrated || !auth.isLoggedIn) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-[#FFFDF5] text-[#6B4E48] font-sans flex flex-col pb-20">
@@ -138,11 +154,15 @@ export default function BoardWrite() {
           {/* 하단: 컨트롤 버튼 바 */}
           <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-2">
             
-            {/* 좌측: 파일 첨부 */}
-            <button type="button" className="flex items-center gap-2 bg-[#FFFDF5] border border-[#F7D988] text-[#6B4E48] font-bold px-6 py-3 rounded-full hover:bg-[#F7D988] transition-colors">
-              <Image src={fileIcon} alt="첨부파일" width={20} height={20} className="object-contain" />
-              <span>파일 첨부</span>
-            </button>
+            <BoardFileAttachment
+              fileUrl={fileUrl}
+              fileName={fileName}
+              onChange={(nextUrl, nextName) => {
+                setFileUrl(nextUrl);
+                setFileName(nextName);
+              }}
+              disabled={submitting || loadingPost}
+            />
             
             {/* 우측: 익명, 취소, 완료 */}
             <div className="flex items-center gap-4">

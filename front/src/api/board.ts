@@ -1,4 +1,5 @@
 import { apiClient } from '@/utils/api';
+import { getAccessToken } from '@/utils/authStorage';
 import {
   BoardCategory,
   BoardListResponse,
@@ -11,15 +12,7 @@ import {
 const BOARD_BASE = '/api/boards';
 
 const getAuthHeaders = (): HeadersInit => {
-  if (typeof window === 'undefined') {
-    return {};
-  }
-
-  const token =
-    localStorage.getItem('accessToken') ||
-    localStorage.getItem('access_token') ||
-    localStorage.getItem('token');
-
+  const token = getAccessToken();
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 

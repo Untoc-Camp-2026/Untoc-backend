@@ -1,12 +1,13 @@
-'use client';
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import Cropper from 'react-easy-crop';
+
+type CropArea = { x: number; y: number; width: number; height: number };
 import Navbar from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { updatePassword, updateProfile, updateProfileImage, uploadProfileImage } from '@/api/auth';
+import { resolveMediaUrl } from '@/utils/media';
 
 // --- 캔버스에서 이미지를 잘라내는 유틸리티 함수 ---
 const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -67,7 +68,7 @@ export default function MyPage() {
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   // 자기소개
@@ -152,8 +153,8 @@ export default function MyPage() {
   };
 
   // 자르기 영역 변경 시 저장
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+  const onCropComplete = useCallback((_croppedArea: CropArea, croppedPixels: CropArea) => {
+    setCroppedAreaPixels(croppedPixels);
   }, []);
 
   // '적용하기' 버튼 클릭 시 캔버스로 잘라내고 백엔드 전송 준비
@@ -202,7 +203,7 @@ export default function MyPage() {
                 <div className="relative w-44 h-44">
                   <div className="w-full h-full bg-[#F7F2E8] border border-[#E8DFCE] rounded-2xl flex items-center justify-center overflow-hidden shadow-sm">
                     {profileImageUrl ? (
-                      <img src={profileImageUrl} alt="프로필" className="w-full h-full object-cover" />
+                      <img src={resolveMediaUrl(profileImageUrl)} alt="프로필" className="w-full h-full object-cover" />
                     ) : (
                       <svg className="w-20 h-20 text-[#4A4A4A]" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />

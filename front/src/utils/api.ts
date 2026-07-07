@@ -54,5 +54,10 @@ export const apiClient = async <T>(
     throw new Error(errorText || `API Error: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  const text = await response.text();
+  if (!text) {
+    return {} as T;
+  }
+
+  return JSON.parse(text) as T;
 };
