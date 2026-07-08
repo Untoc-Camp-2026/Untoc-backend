@@ -112,7 +112,7 @@ export default function CalendarPage() {
     <>
       <Header />
 
-      <main className="calendar-page">
+      <main className="calendar-page bg-[#FFFDF5]">
         <div className="calendar-header">
           <div>
             <h1 className="calendar-title">CALENDAR</h1>
