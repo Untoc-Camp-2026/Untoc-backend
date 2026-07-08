@@ -15,8 +15,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      ports:
-       - "3307:3306"
+    ports:
+    - "3307:3306"
     networks:
       - internal_net
 
