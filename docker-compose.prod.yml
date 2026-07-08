@@ -1,43 +1,50 @@
-# 배포 전용 Docker Compose
-# 사용법:
-#   1. .env.prod 파일 생성 (아래 변수 설정)
-#   2. docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
-
+# docker-compose.prod.yml
 services:
   db:
     image: mysql:8.0
     restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?MYSQL_ROOT_PASSWORD required}
-      MYSQL_DATABASE: ${MYSQL_DATABASE:-untoc}
-      MYSQL_USER: ${MYSQL_USER:-untoc}
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?MYSQL_PASSWORD required}
+      MYSQL_ROOT_PASSWORD: 1520
+      MYSQL_DATABASE: untoc
     volumes:
       - mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u${MYSQL_USER:-untoc} -p$$MYSQL_PASSWORD"]
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p1520"]
       interval: 10s
       timeout: 5s
       retries: 10
     networks:
       - internal
-    # DB 포트는 외부에 노출하지 않음
 
   api:
-    build:
+    build: 
       context: ./app
     restart: always
     depends_on:
       db:
         condition: service_healthy
     environment:
-      SQLALCHEMY_DATABASE_URL: mysql+aiomysql://${MYSQL_USER:-untoc}:${MYSQL_PASSWORD}@db:3306/${MYSQL_DATABASE:-untoc}
+      SQLALCHEMY_DATABASE_URL: mysql+aiomysql://root:1520@db:3306/untoc
     ports:
-      - "${API_BIND_HOST:-127.0.0.1}:${API_PORT:-8000}:8000"
+      - "8080:8000"
     volumes:
       - uploads_data:/app/uploads
     command: uvicorn main:app --host 0.0.0.0 --port 8000 --workers 2
+    networks:
+      - internal
+
+  front:
+    build:
+      context: ./front
+      dockerfile: Dockerfile.prod
+      args:
+        - NEXT_PUBLIC_API_URL=http://161.33.19.121:8080
+    restart: always
+    ports:
+      - "8000:3000"
+    depends_on:
+      - api
     networks:
       - internal
 
