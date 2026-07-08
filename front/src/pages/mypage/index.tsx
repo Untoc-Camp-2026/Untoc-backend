@@ -122,6 +122,14 @@ export default function MyPage() {
       alert('이미지 파일만 업로드 가능합니다.');
       return;
     }
+
+  // 용량 제한 로직 추가 (예: 5MB)
+  const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('파일 크기는 5MB 이하로 업로드해주세요.');
+      return;
+    }
+    
     const reader = new FileReader();
     reader.readAsDataURL(file);
     reader.onload = () => {
