@@ -1,6 +1,0 @@
-node_modules/
-front/node_modules/
-front/.next/
-.git/
-*.log
-.DS_Store

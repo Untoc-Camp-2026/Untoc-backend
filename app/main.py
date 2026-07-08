@@ -16,11 +16,17 @@ from fastapi.staticfiles import StaticFiles
 
 app = FastAPI()
 
+origins = [
+    "http://127.0.0.1",
+    "http://localhost",
+    "http://localhost:3000",
+    "http://161.33.19.121:8000"
+]
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
