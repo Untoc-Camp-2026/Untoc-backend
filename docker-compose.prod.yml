@@ -41,6 +41,19 @@ services:
     networks:
       - internal
 
+front:
+    build:
+      context: ./front
+    restart: always
+    ports:
+      - "80:3000"  # 사용자가 도메인이나 IP로 접속하면 3000번 프론트로 연결!
+    environment:
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+    depends_on:
+      - api
+    networks:
+      - internal
+
 networks:
   internal:
     driver: bridge
