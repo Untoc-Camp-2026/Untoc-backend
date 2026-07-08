@@ -1,6 +1,10 @@
 // utils/api.ts
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+export const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
+interface ApiClientOptions extends RequestInit {
+  timeoutMs?: number;
+}
 
 /**
  * 애플리케이션 공통 API Fetcher
@@ -8,15 +12,18 @@ const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
  */
 export const apiClient = async <T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: ApiClientOptions = {}
 ): Promise<T> => {
+  const { timeoutMs = 8000, ...fetchOptions } = options;
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   
   // 💡 추후 로그인 기능이 완성되면, 여기에 토큰을 가져오는 코드를 넣습니다.
   // const token = localStorage.getItem('accessToken');
   
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...fetchOptions.headers,
   };
 
   // 💡 토큰이 있다면 자동으로 모든 요청의 헤더에 포함시킵니다.
@@ -24,15 +31,33 @@ export const apiClient = async <T>(
   //   headers['Authorization'] = `Bearer ${token}`;
   // }
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
 
-  if (!response.ok) {
-    // 401(인증 만료), 403(권한 없음) 등의 전역 에러를 여기서 한 번에 처리할 수 있습니다.
-    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+  try {
+    response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...fetchOptions,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (error) {
+    if ((error as Error).name === 'AbortError') {
+      throw new Error('요청 시간이 초과되었습니다. 백엔드 서버 상태를 확인해주세요.');
+    }
+
+    throw new Error('서버에 연결할 수 없습니다. 백엔드가 실행 중인지 확인해주세요.');
+  } finally {
+    clearTimeout(timeoutId);
   }
 
-  return response.json();
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(errorText || `API Error: ${response.status} ${response.statusText}`);
+  }
+
+  const text = await response.text();
+  if (!text) {
+    return {} as T;
+  }
+
+  return JSON.parse(text) as T;
 };

@@ -4,7 +4,7 @@ import React from 'react';
 import Image from 'next/image';
 import Navbar from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
-import EmptyMember from '../../assets/images/empty_member.png';
+import EmptyMember from '../../assets/images/empty_member.svg';
 
 type Member = {
   role: string;

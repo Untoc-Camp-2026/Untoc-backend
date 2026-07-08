@@ -1,13 +1,49 @@
-// types/board.ts (게시판 및 글쓰기)
-export type BoardCategory = '자유' | '시험' | '스터디' | '취업' | '게임';
+export type BoardCategory = 'FREE' | 'EXAM' | 'STUDY' | 'JOB' | 'GAME';
+
+export const BoardCategoryLabel: Record<BoardCategory, string> = {
+  FREE: '자유',
+  EXAM: '시험',
+  STUDY: '스터디',
+  JOB: '취업',
+  GAME: '게임',
+};
 
 export interface Post {
-  id: number;
-  category: BoardCategory;
+  board_id: number;
+  user_id: string;
   title: string;
   content: string;
-  author: string;
-  createdAt: string;    // "2026-07-03T10:00:00Z"
-  isAnonymous: boolean; // 익명 여부 체크박스
-  attachments?: string[];
+  category: BoardCategory;
+  anonymous: boolean;
+  file_url?: string | null;
 }
+
+export interface Comment {
+  comment_id: number;
+  board_id: number;
+  user_id: string;
+  content: string;
+  anonymous: boolean;
+  created_at: string;
+  is_owner: boolean;
+}
+
+export interface PostDetail extends Post {
+  is_owner: boolean;
+  comments: Comment[];
+}
+
+export interface BoardListResponse {
+  total_count: number;
+  items: Post[];
+}
+
+export interface CreatePostPayload {
+  title: string;
+  content: string;
+  category: BoardCategory;
+  anonymous: boolean;
+  file_url?: string;
+}
+
+export interface UpdatePostPayload extends CreatePostPayload {}

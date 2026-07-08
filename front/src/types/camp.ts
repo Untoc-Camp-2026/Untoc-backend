@@ -1,12 +1,55 @@
-// types/camp.ts (UNTOC CAMP 작품들)
-export interface Project {
+export interface CampProject {
   id: number;
-  term: string;         // "26-1"
-  title: string;        // "역대급 언톡 홈페이지 제작"
-  subject: string;      // "언톡 홈페이지"
-  teamName: string;     // "웨베벱~"
-  thumbnailUrl: string; // 카드 이미지
-  leader: string;
-  members: string[];
-  notionLink?: string;  // 테이블에서 이동할 팀 노션
+  term: string;
+  image_url?: string | null;
+  team_name?: string | null;
+  description?: string | null;
+  content?: string | null;
+  subject?: string | null;
+  leader_name?: string | null;
+  member_names?: string | null;
+  display_order?: number | null;
+  is_visible: boolean;
+  created_at: string;
+  updated_at: string;
 }
+
+export interface MainProjectRow {
+  id: number;
+  teamName: string;
+  projectName: string;
+  subject: string;
+  notionUrl: string | null;
+}
+
+export interface CampProjectCard {
+  id: number;
+  term: string;
+  title: string;
+  subtitle: string;
+  imgUrl: string;
+  topic: string;
+  leader: string;
+  members: string;
+  description: string;
+}
+
+export const mapCampProjectToRow = (project: CampProject): MainProjectRow => ({
+  id: project.id,
+  teamName: project.team_name || '-',
+  projectName: project.description || '-',
+  subject: project.subject || '-',
+  notionUrl: project.content?.startsWith('http') ? project.content : null,
+});
+
+export const mapCampProjectToCard = (project: CampProject): CampProjectCard => ({
+  id: project.id,
+  term: project.term,
+  title: project.team_name || '팀',
+  subtitle: project.description || '',
+  imgUrl: project.image_url || '#EED270',
+  topic: project.subject || '',
+  leader: project.leader_name || '',
+  members: project.member_names || '',
+  description: project.content || '',
+});

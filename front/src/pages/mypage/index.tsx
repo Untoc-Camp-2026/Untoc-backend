@@ -1,10 +1,13 @@
-'use client';
-
 import React, { useState, useRef, useCallback, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter } from 'next/router';
 import Cropper from 'react-easy-crop';
+
+type CropArea = { x: number; y: number; width: number; height: number };
 import Navbar from '../../components/layout/Header';
 import Footer from '../../components/layout/Footer';
+import { useAuth } from '@/contexts/AuthContext';
+import { updatePassword, updateProfile, updateProfileImage, uploadProfileImage } from '@/api/auth';
+import { resolveMediaUrl } from '@/utils/media';
 
 // --- 캔버스에서 이미지를 잘라내는 유틸리티 함수 ---
 const createImage = (url: string): Promise<HTMLImageElement> =>
@@ -49,27 +52,27 @@ async function getCroppedImg(imageSrc: string, pixelCrop: { x: number; y: number
 
 export default function MyPage() {
   const router = useRouter();
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const auth = useAuth();
 
   useEffect(() => {
-    if (!isLoggedIn) {
+    if (auth.isHydrated && !auth.isLoggedIn) {
       router.replace('/login');
       alert('회원 전용 페이지입니다. 로그인 페이지로 이동합니다.');
     }
-  }, [isLoggedIn, router]);
+  }, [auth.isHydrated, auth.isLoggedIn, router]);
 
   const [viewMode, setViewMode] = useState<'intro' | 'upload'>('intro');
 
   // 프로필 변경 및 자르기 상태 관리
-  const [profileImageUrl, setProfileImageUrl] = useState('');
+  const [profileImageUrl, setProfileImageUrl] = useState(auth.session?.profileImageUrl || '');
   const [imagePreviewUrl, setImagePreviewUrl] = useState<string | null>(null);
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
-  const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<CropArea | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
   // 자기소개
-  const [introduction, setIntroduction] = useState('');
+  const [introduction, setIntroduction] = useState(auth.session?.introduction || '');
   const [editIntroduction, setEditIntroduction] = useState(false);
   const [tempIntroduction, setTempIntroduction] = useState('');
 
@@ -77,17 +80,40 @@ export default function MyPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [savingIntroduction, setSavingIntroduction] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
+  const [savingProfileImage, setSavingProfileImage] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePasswordSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (!auth.session) return;
+    setProfileImageUrl(auth.session.profileImageUrl || '');
+    setIntroduction(auth.session.introduction || '');
+  }, [auth.session]);
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!auth.session?.accessToken) return;
+
     if (newPassword !== confirmPassword) {
       alert('새 비밀번호가 일치하지 않습니다.');
       return;
     }
-    console.log('비밀번호 변경 요청 데이터:', { currentPassword, newPassword });
-    alert('비밀번호 변경 요청이 콘솔에 기록되었습니다.');
+
+    setSavingPassword(true);
+    try {
+      await updatePassword(auth.session.accessToken, currentPassword, newPassword);
+      alert('비밀번호가 변경되었습니다.');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '비밀번호 변경에 실패했습니다.');
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   // 공통 파일 처리 함수 (미리보기 URL 생성)
@@ -127,25 +153,25 @@ export default function MyPage() {
   };
 
   // 자르기 영역 변경 시 저장
-  const onCropComplete = useCallback((croppedArea: any, croppedAreaPixels: any) => {
-    setCroppedAreaPixels(croppedAreaPixels);
+  const onCropComplete = useCallback((_croppedArea: CropArea, croppedPixels: CropArea) => {
+    setCroppedAreaPixels(croppedPixels);
   }, []);
 
   // '적용하기' 버튼 클릭 시 캔버스로 잘라내고 백엔드 전송 준비
   const handleCropSave = async () => {
-    if (!imagePreviewUrl || !croppedAreaPixels) return;
+    if (!imagePreviewUrl || !croppedAreaPixels || !auth.session?.accessToken) return;
 
     try {
+      setSavingProfileImage(true);
       const croppedImageBlob = await getCroppedImg(imagePreviewUrl, croppedAreaPixels);
       if (croppedImageBlob) {
-        // 화면 표출을 위한 임시 URL 생성
-        const croppedImageUrl = URL.createObjectURL(croppedImageBlob);
-        setProfileImageUrl(croppedImageUrl);
-        
-        // TODO: 백엔드 전송을 위한 FormData 생성 위치
-        const formData = new FormData();
-        formData.append('profileImage', croppedImageBlob, 'profile.jpg');
-        console.log('잘라낸 이미지 Blob 생성 완료. 백엔드 전송 준비됨.');
+        const uploadedImageUrl = await uploadProfileImage(auth.session.accessToken, croppedImageBlob);
+        const savedProfileImageUrl = await updateProfileImage(auth.session.accessToken, uploadedImageUrl);
+        setProfileImageUrl(savedProfileImageUrl);
+        auth.updateSession({
+          ...auth.session,
+          profileImageUrl: savedProfileImageUrl,
+        });
 
         // 초기화 및 화면 전환
         setImagePreviewUrl(null);
@@ -153,9 +179,12 @@ export default function MyPage() {
       }
     } catch (e) {
       console.error('이미지 자르기 실패:', e);
+      alert(e instanceof Error ? e.message : '프로필 이미지 저장에 실패했습니다.');
+    } finally {
+      setSavingProfileImage(false);
     }
   };
-  if (!isLoggedIn) {
+  if (!auth.isHydrated || !auth.isLoggedIn) {
     return null; // 로그인 상태가 아니면 아무것도 렌더링하지 않음
   }
 
@@ -174,7 +203,7 @@ export default function MyPage() {
                 <div className="relative w-44 h-44">
                   <div className="w-full h-full bg-[#F7F2E8] border border-[#E8DFCE] rounded-2xl flex items-center justify-center overflow-hidden shadow-sm">
                     {profileImageUrl ? (
-                      <img src={profileImageUrl} alt="프로필" className="w-full h-full object-cover" />
+                      <img src={resolveMediaUrl(profileImageUrl)} alt="프로필" className="w-full h-full object-cover" />
                     ) : (
                       <svg className="w-20 h-20 text-[#4A4A4A]" fill="currentColor" viewBox="0 0 24 24">
                         <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
@@ -231,7 +260,7 @@ export default function MyPage() {
                           <button
                             type="button"
                             onClick={() => {
-                              setTempIntroduction('');
+                              setTempIntroduction(introduction);
                               setEditIntroduction(false);
                             }}
                             className="px-3 py-1 bg-white border border-gray-300 text-gray-600 rounded-full text-xs hover:bg-gray-50 shadow-sm"
@@ -241,14 +270,28 @@ export default function MyPage() {
 
                           <button
                             type="button"
-                            onClick={() => {
-                              setIntroduction(tempIntroduction);
-                              setEditIntroduction(false);
-                              console.log('자기소개 저장 요청:', tempIntroduction);
+                            disabled={savingIntroduction}
+                            onClick={async () => {
+                              if (!auth.session?.accessToken) return;
+                              setSavingIntroduction(true);
+                              try {
+                                await updateProfile(auth.session.accessToken, tempIntroduction);
+                                setIntroduction(tempIntroduction);
+                                auth.updateSession({
+                                  ...auth.session,
+                                  introduction: tempIntroduction,
+                                });
+                                setEditIntroduction(false);
+                                alert('자기소개가 저장되었습니다.');
+                              } catch (error) {
+                                alert(error instanceof Error ? error.message : '자기소개 저장에 실패했습니다.');
+                              } finally {
+                                setSavingIntroduction(false);
+                              }
                             }}
                             className="px-3 py-1 bg-[#F7D988] hover:bg-[#e4d197] text-[#6B4E48] rounded-full text-xs font-bold shadow-sm"
                           >
-                            완료
+                            {savingIntroduction ? '저장 중...' : '완료'}
                           </button>
                         </div>
                       )}
@@ -342,9 +385,10 @@ export default function MyPage() {
                           </button>
                           <button
                             onClick={handleCropSave}
+                            disabled={savingProfileImage}
                             className="px-6 py-2 bg-[#F7D988] hover:bg-[#e4d197] text-[#5A4A32] rounded-full text-xs font-bold shadow-sm transition-colors"
                           >
-                            적용하기
+                            {savingProfileImage ? '저장 중...' : '적용하기'}
                           </button>
                         </div>
                       </div>

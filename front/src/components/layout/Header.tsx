@@ -1,13 +1,18 @@
 import Link from "next/link";
 import { useState } from "react";
-import Logo from "@/assets/images/언톡_스티커.webp";
+import Logo from "@/assets/images/untoc_logo.svg";
 import Image from "next/image";
+import { useAuth } from "@/contexts/AuthContext";
 
 type HeaderProps = {
   isLogin?: boolean;
+  isAdmin?: boolean;
 };
 
-export default function Header({ isLogin = false }: HeaderProps) {
+export default function Header({ isLogin, isAdmin }: HeaderProps) {
+  const auth = useAuth();
+  const resolvedIsLogin = isLogin ?? auth.isLoggedIn;
+  const resolvedIsAdmin = isAdmin ?? auth.isAdmin;
   const [showUntoc, setShowUntoc] = useState(false);
   const [showCamp, setShowCamp] = useState(false);
   // 게시판 드롭다운 상태 추가
@@ -18,7 +23,7 @@ export default function Header({ isLogin = false }: HeaderProps) {
       <div className="flex h-24 items-center justify-between px-12">
 
         {/* Logo */}
-        <Link href="/">
+        <Link href={auth.isLoggedIn ? "/main" : "/"}>
           <Image
             src={Logo}
             alt="UNTOC Logo"
@@ -32,7 +37,7 @@ export default function Header({ isLogin = false }: HeaderProps) {
         <div className="flex items-center gap-10">
           {/* Navigation */}
           <nav className="flex items-center gap-4 text-[15px] font-bold text-[#6B4E48]">
-            {!isLogin ? (
+            {!resolvedIsLogin ? (
               <>
                 {/* UNTOC */}
                 <div
@@ -146,6 +151,11 @@ export default function Header({ isLogin = false }: HeaderProps) {
                 >
                   캘린더
                 </Link>
+                {resolvedIsAdmin && (
+                  <span className="rounded-full border border-[#F7D988] px-4 py-2 text-sm font-semibold text-[#6B4E48]">
+                    관리자
+                  </span>
+                )}
                 <Link
                   href="/attendance"
                   className="rounded-full px-4 py-2 transition-all duration-200 hover:bg-[#F7D988] hover:shadow-sm"
@@ -163,7 +173,7 @@ export default function Header({ isLogin = false }: HeaderProps) {
           </nav>
 
           {/* Right (로그인 / 로그아웃) */}
-          {!isLogin ? (
+          {!resolvedIsLogin ? (
             <Link
               href="/login"
               className="rounded-full border-2 border-[#F7D988] px-6 py-2 text-sm font-semibold text-[#6B4E48] transition-all hover:bg-[#F7D988]"

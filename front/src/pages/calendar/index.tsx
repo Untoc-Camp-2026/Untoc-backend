@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import dynamic from "next/dynamic";
 
 import Header from "@/components/layout/Header";
@@ -7,6 +7,16 @@ import Footer from "@/components/layout/Footer";
 import CalendarTile from "@/components/calendar/CalendarTile";
 import CalendarDetail from "@/components/calendar/CalendarDetail";
 import CalendarModal from "@/components/calendar/CalendarModal";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  createCalendarEvent,
+  deleteCalendarEvent,
+  getCalendarCategories,
+  getMonthCalendarEvents,
+  toCalendarCreatePayload,
+  toCalendarUpdatePayload,
+  updateCalendarEvent,
+} from "@/api/calendar";
 
 import type { CalendarEvent } from "@/types/calendar";
 
@@ -17,138 +27,99 @@ const Calendar = dynamic(() => import("react-calendar"), {
 });
 
 export default function CalendarPage() {
-
-  // ======================================
-  // TODO : 백엔드 로그인 연결 시 수정
-  // const isAdmin = user.role === "ADMIN";
-  // ======================================
-
-  const isAdmin = true; //true일때 일정 등록하기 버튼 뜸. 프론트엔드 테스트 시 const admin값을 true로 해두고 일정 등록 확인해보기
-
-  // ======================================
-  // 선택 날짜
-  // ======================================
+  const auth = useAuth();
+  const isAdmin = auth.isAdmin;
 
   const [selectedDate, setSelectedDate] = useState(new Date());
-
-  // ======================================
-  // 모달
-  // ======================================
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-
-  // ======================================
-  // TODO : 백엔드 연결 시 삭제
-  // 더미 데이터
-  // ======================================
-
-  const [events, setEvents] = useState<CalendarEvent[]>([
-    {
-      id: 1,
-      title: "OT",
-      startDate: "2026-09-10",
-      endDate: "2026-09-10",
-      time: "18:00 ~ 20:00",
-      location: "IT관",
-      description: "OT 진행",
-    },
-    {
-      id: 2,
-      title: "최종 발표",
-      startDate: "2026-09-19",
-      endDate: "2026-09-19",
-      time: "19:00",
-      location: "IT관",
-      description: "최종 발표입니다.",
-    },
-  ]);
-
-
-
-  // ======================================
-  // 날짜 포맷
-  // ======================================
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [defaultCategoryId, setDefaultCategoryId] = useState<number | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [modalMode, setModalMode] = useState<"create" | "edit">("create");
+  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
 
   const formatDate = (date: Date) => {
     const y = date.getFullYear();
-
     const m = String(date.getMonth() + 1).padStart(2, "0");
-
     const d = String(date.getDate()).padStart(2, "0");
-
     return `${y}-${m}-${d}`;
   };
 
-  // ======================================
-  // 선택된 날짜 일정
-  // ======================================
+  const loadEvents = useCallback(async (date: Date) => {
+    setLoading(true);
+    try {
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const [monthEvents, categories] = await Promise.all([
+        getMonthCalendarEvents(year, month),
+        getCalendarCategories(),
+      ]);
+      setEvents(monthEvents);
+      setDefaultCategoryId(categories[0]?.category_id ?? null);
+    } catch (error) {
+      setEvents([]);
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-const selectedEvents = useMemo(() => {
+  useEffect(() => {
+    void loadEvents(selectedDate);
+  }, [selectedDate, loadEvents]);
 
-  const target = formatDate(selectedDate);
-
-  return events.filter((event) => {
-
-    return (
-      target >= event.startDate &&
-      target <= event.endDate
-    );
-
-  });
-
-}, [selectedDate, events]);
-
-  // ======================================
-  // 날짜별 일정
-  // ======================================
+  const selectedEvents = useMemo(() => {
+    const target = formatDate(selectedDate);
+    return events.filter((event) => target >= event.startDate && target <= event.endDate);
+  }, [selectedDate, events]);
 
   const getEventsByDate = (date: Date) => {
     const target = formatDate(date);
-
-    return events.filter((event) => {
-      return (
-        target >= event.startDate &&
-        target <= event.endDate
-      );
-    });
+    return events.filter((event) => target >= event.startDate && target <= event.endDate);
   };
 
-  const [modalMode, setModalMode] =
-useState<"create"|"edit">("create");
+  const handleSave = async (newEvent: CalendarEvent) => {
+    try {
+      if (modalMode === "create") {
+        if (!defaultCategoryId) {
+          alert("일정 카테고리가 없습니다. 관리자가 카테고리를 먼저 등록해야 합니다.");
+          return;
+        }
+        await createCalendarEvent(toCalendarCreatePayload(newEvent, defaultCategoryId));
+      } else {
+        await updateCalendarEvent(newEvent.id, toCalendarUpdatePayload(newEvent));
+      }
+      await loadEvents(selectedDate);
+      setIsModalOpen(false);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "일정 저장에 실패했습니다.");
+    }
+  };
 
-const [selectedEvent,setSelectedEvent]
-=
-useState<CalendarEvent|null>(null);
+  const handleDelete = async (id: number) => {
+    if (!confirm("이 일정을 삭제하시겠습니까?")) return;
 
-
+    try {
+      await deleteCalendarEvent(id);
+      await loadEvents(selectedDate);
+      setSelectedEvent(null);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "일정 삭제에 실패했습니다.");
+    }
+  };
 
   return (
     <>
-      {/* ===============================
-          Header
-      =============================== */}
-      <Header isLogin={true} />
+      <Header />
 
       <main className="calendar-page">
-        {/* ===============================
-            상단
-        =============================== */}
-
         <div className="calendar-header">
           <div>
-            <h1 className="calendar-title">
-              CALENDAR
-            </h1>
-
+            <h1 className="calendar-title">CALENDAR</h1>
             <p className="calendar-description">
               날짜를 클릭하면 해당 일정의 상세 정보를 확인할 수 있습니다.
             </p>
           </div>
-
-          {/* ======================================
-              TODO : 백엔드 로그인 연결
-              관리자만 일정 등록 가능
-          ====================================== */}
 
           {isAdmin && (
             <button
@@ -157,112 +128,59 @@ useState<CalendarEvent|null>(null);
                 setSelectedEvent(null);
                 setModalMode("create");
                 setIsModalOpen(true);
-            }}
+              }}
             >
               일정 등록하기
             </button>
           )}
         </div>
 
-        {/* ===============================
-            좌우 레이아웃
-        =============================== */}
+        {loading && (
+          <p className="calendar-description mb-4">일정을 불러오는 중...</p>
+        )}
 
         <div className="calendar-layout">
-
-          {/* 일정 상세 */}
-
           <CalendarDetail
             date={selectedDate}
             events={selectedEvents}
             isAdmin={isAdmin}
             onEdit={(event) => {
-                setSelectedEvent(event);
-                setModalMode("edit");
-                setIsModalOpen(true);
+              setSelectedEvent(event);
+              setModalMode("edit");
+              setIsModalOpen(true);
             }}
-            onDelete={(id) => {
-
-            setEvents((prev) =>
-                prev.filter((event) => event.id !== id)
-            );
-
-            setSelectedEvent(null);
-
-            }}
-        />
-
-          {/* 달력 */}
+            onDelete={handleDelete}
+          />
 
           <div className="calendar-wrapper">
-
             <Calendar
               className="custom-calendar"
-
               value={selectedDate}
-
               calendarType="gregory"
-
-              onChange={(value) => {
+              onChange={(value: Date | Date[] | null) => {
                 if (value instanceof Date) {
                   setSelectedDate(value);
                 }
               }}
-
               formatDay={() => ""}
-
-              formatShortWeekday={(locale, date) =>
-                ["일", "월", "화", "수", "목", "금", "토"][
-                  date.getDay()
-                ]
+              formatShortWeekday={(_locale: string | undefined, date: Date) =>
+                ["일", "월", "화", "수", "목", "금", "토"][date.getDay()]
               }
-
-              tileContent={({ date }) => (
-                <CalendarTile
-                  date={date}
-                  events={getEventsByDate(date)}
-                />
+              tileContent={({ date }: { date: Date }) => (
+                <CalendarTile date={date} events={getEventsByDate(date)} />
               )}
             />
-
           </div>
-
         </div>
 
-        {/* ===============================
-            일정 등록 모달
-        =============================== */}
-
         <CalendarModal
-            open={isModalOpen}
-            mode={modalMode}
-            event={selectedEvent}
-            onClose={() => setIsModalOpen(false)}
-            onSave={(newEvent) => {
-
-                    if (modalMode === "create") {
-
-                    setEvents((prev) => [...prev, newEvent]);
-
-                    } else {
-
-                        setEvents((prev) =>
-                        prev.map((event) =>
-                        event.id === newEvent.id ? newEvent : event
-                        )
-                    );
-
-                }
-
-                setIsModalOpen(false);
-            }}
+          open={isModalOpen}
+          mode={modalMode}
+          event={selectedEvent}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSave}
         />
-
       </main>
-
-      {/* ===============================
-          Footer
-      =============================== */}
 
       <Footer />
     </>

@@ -1,13 +1,31 @@
-// types/attendance.ts (출석부)
-export type AttendanceStatus = '출석' | '지각' | '결석';
+export type AttendanceStatus = '출석' | '결석';
 
-export interface AttendanceRecord {
-  date: string;         // "2026-09-03"
-  allowedTime: string;  // "10:00"
-  code: string;         // 출석코드
-  records: {
-    userId: number;
-    userName: string;
-    status: AttendanceStatus;
-  }[];
+export interface AttendanceSessionResponse {
+  id: number;
+  auth_code: string;
+  expires_at: string;
+}
+
+export interface AttendanceRecordResponse {
+  user_id: string;
+  date: string;
+  status: AttendanceStatus;
+  attended_at?: string | null;
+}
+
+export interface CreateSessionPayload {
+  title: string;
+  location: string;
+  duration_minutes: number;
+}
+
+export interface UpdateAttendanceStatusPayload {
+  userId: string;
+  targetDate: string;
+  status: AttendanceStatus;
+}
+
+export interface AttendanceMemberRow {
+  userId: string;
+  status: AttendanceStatus | '미체크';
 }

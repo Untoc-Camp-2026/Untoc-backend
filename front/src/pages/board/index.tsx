@@ -1,96 +1,93 @@
-// front/src/pages/board/index.tsx
 import { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { BoardCategory, Post } from '@/types/board';
+import { BoardCategory, BoardCategoryLabel, Post } from '@/types/board';
 import { getPosts } from '@/api/board';
 
+// 분리한 도메인 종속 컴포넌트 불러오기
 import PostItem from '@/components/board/PostItem';
 import FloatingWriteBtn from '@/components/board/FloatingWriteBtn';
+import Header from '@/components/layout/Header';
+import Footer from '@/components/layout/Footer';
+import { Pagination } from '@/components/common/Pagination';
 
-// 💡 프로의 팁: 카테고리별 렌더링 정보를 객체(Dictionary)로 분리하여 관리
-const CATEGORY_INFO: Record<BoardCategory, { label: string; emoji: string }> = {
-  FREE: { label: '자유게시판', emoji: '💬' },
-  EXAM: { label: '시험게시판', emoji: '📝' },
-  STUDY: { label: '스터디게시판', emoji: '📚' },
-  JOB: { label: '취업게시판', emoji: '💼' },
-  GAME: { label: '게임게시판', emoji: '🎮' },
+// 💡 카테고리별 아이콘 매핑 객체 추가
+const BoardCategoryIcon: Record<BoardCategory, string> = {
+  FREE: '💬',
+  EXAM: '📝',
+  STUDY: '📚',
+  JOB: '💼',
+  GAME: '🎮',
 };
 
 export default function BoardList() {
   const router = useRouter();
-  
   const [currentCategory, setCurrentCategory] = useState<BoardCategory>('FREE');
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  
   const [searchQuery, setSearchQuery] = useState('');
+  const [searchKeyword, setSearchKeyword] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
   const postsPerPage = 10;
   const totalPages = Math.ceil(totalCount / postsPerPage) || 1;
 
-  // 1. 라우터에서 카테고리를 감지하여 상태 업데이트
   useEffect(() => {
-    if (router.isReady) {
-      const queryCategory = router.query.category as BoardCategory;
-      if (queryCategory && CATEGORY_INFO[queryCategory]) {
-        setCurrentCategory(queryCategory);
-        setCurrentPage(1); // 카테고리가 바뀌면 1페이지로 초기화
-      }
-    }
-  }, [router.isReady, router.query.category]);
+    const queryCategory = router.query.category;
+    if (typeof queryCategory !== 'string') return;
 
-  // 2. 카테고리 변경 시 데이터 패칭
+    const allowedCategories: BoardCategory[] = ['FREE', 'EXAM', 'STUDY', 'JOB', 'GAME'];
+    if (allowedCategories.includes(queryCategory as BoardCategory)) {
+      setCurrentCategory(queryCategory as BoardCategory);
+      setCurrentPage(1);
+    }
+  }, [router.query.category]);
+
   useEffect(() => {
     const fetchPosts = async () => {
       setLoading(true);
+      setErrorMessage('');
       try {
-        const response = await getPosts(currentCategory, currentPage);
-        if (response && response.items) {
-          setPosts(response.items);
-          setTotalCount(response.total_count || 0);
-        } else if (Array.isArray(response)) {
-          setPosts(response);
-          setTotalCount(response.length);
-        }
+        const response = await getPosts(currentCategory, currentPage, searchKeyword);
+        setPosts(response.items || []);
+        setTotalCount(response.total_count || 0);
       } catch (error) {
         console.error('게시글 로드 실패:', error);
+        setPosts([]);
+        setTotalCount(0);
+        setErrorMessage(error instanceof Error ? error.message : '게시글을 불러오지 못했습니다.');
       } finally {
         setLoading(false);
       }
     };
     fetchPosts();
-  }, [currentCategory, currentPage]);
+  }, [currentCategory, currentPage, searchKeyword]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('검색어 제출:', searchQuery);
+    setCurrentPage(1);
+    setSearchKeyword(searchQuery.trim());
   };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
-  };
-
-  // 현재 화면에 띄울 라벨과 이모지 추출
-  const { label, emoji } = CATEGORY_INFO[currentCategory];
 
   return (
-    <div className="w-full flex flex-col relative pb-24">
+    <div className="min-h-screen bg-[#FFFDF5] text-[#6B4E48] font-sans flex flex-col relative pb-24">
       <Head>
-        <title>{label} - UNTOC</title>
+        <title>{BoardCategoryLabel[currentCategory]}게시판 - UNTOC</title>
       </Head>
 
+      <Header />
+
+      {/* 본문 컨텐츠 영역 */}
       <main className="flex-1 flex flex-col items-center w-full max-w-4xl mx-auto px-4 py-12 gap-6">
         
-        {/* 💡 동적 타이틀 렌더링 (클릭한 메뉴에 맞게 이모지와 텍스트 변경) */}
-        <div className="flex items-center gap-3 text-4xl font-extrabold text-[#6B4E48]">
-          <span className="text-3xl">{emoji}</span>
-          <h1>{label}</h1>
+        {/* 타이틀 */}
+        <div className="flex items-center gap-2 text-4xl font-extrabold text-[#6B4E48]">
+          {/* 💡 고정된 이모지 대신 매핑된 아이콘을 출력하도록 수정 */}
+          <span className="text-3xl">{BoardCategoryIcon[currentCategory]}</span>
+          <h1>{BoardCategoryLabel[currentCategory]}게시판</h1>
         </div>
 
         {/* 검색바 */}
@@ -112,10 +109,14 @@ export default function BoardList() {
           </button>
         </form>
 
-        {/* 게시글 목록 카드 리스트 */}
+        {/* 게시글 목록 카드 리스트 (분리한 PostItem 적용) */}
         <div className="w-full max-w-3xl flex flex-col gap-3.5 mt-4">
           {loading ? (
             <div className="text-center py-20 text-[#A3918D] font-bold">로딩 중...</div>
+          ) : errorMessage ? (
+            <div className="bg-white rounded-2xl border border-[#F0C7C7] py-10 px-6 text-center text-[#B04A4A] font-bold shadow-sm">
+              {errorMessage}
+            </div>
           ) : posts.length === 0 ? (
             <div className="bg-white rounded-full border border-[#E8E0D5] py-10 text-center text-[#A3918D] font-bold shadow-sm">
               등록된 게시물이 없습니다.
@@ -128,47 +129,15 @@ export default function BoardList() {
         </div>
 
         {/* 하단 제어 페이지네이션 */}
-        <div className="flex items-center gap-2 mt-8">
-          <button 
-            type="button"
-            onClick={handlePrevPage}
-            disabled={currentPage === 1}
-            className={`w-10 h-10 flex items-center justify-center rounded-full bg-white border border-[#E8E0D5] text-[#6B4E48] font-bold shadow-sm transition-colors ${
-              currentPage === 1 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[#F7D988]'
-            }`}
-          >
-            &lt;
-          </button>
-          
-          {[...Array(totalPages)].map((_, i) => (
-            <button
-              key={i + 1}
-              onClick={() => setCurrentPage(i + 1)}
-              className={`w-10 h-10 flex items-center justify-center rounded-full text-sm font-bold transition-all shadow-sm ${
-                currentPage === i + 1 
-                  ? 'bg-[#2A2421] text-white' 
-                  : 'bg-white border border-[#E8E0D5] text-[#6B4E48] hover:bg-[#F7D988]'
-              }`}
-            >
-              {i + 1}
-            </button>
-          ))}
-
-          <button 
-            type="button"
-            onClick={handleNextPage}
-            disabled={currentPage === totalPages}
-            className={`w-10 h-10 flex items-center justify-center rounded-full bg-white border border-[#E8E0D5] text-[#6B4E48] font-bold transition-colors ${
-              currentPage === totalPages ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[#F7D988]'
-            }`}
-          >
-            &gt;
-          </button>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPage={totalPages}
+          onPageChange={setCurrentPage}
+        />
       </main>
 
-      {/* 우측 하단 플로팅 글쓰기 버튼 컴포넌트 적용 */}
       <FloatingWriteBtn />
+      <Footer />
     </div>
   );
 }
