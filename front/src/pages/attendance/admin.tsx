@@ -16,19 +16,20 @@ const INITIAL_MEMBERS = [
 ];
 
 export default function AdminAttendancePage() {
-  const [date, setDate] = useState('2026-07-03'); // 디자인 합본 기준 기본값
-  const [allowTime, setAllowTime] = useState('10'); // 기본 10분 설정
+  const [date, setDate] = useState('2026-07-03');
+  const [allowTime, setAllowTime] = useState('10');
   const [attendanceCode, setAttendanceCode] = useState('------');
   const [isStarted, setIsStarted] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false); // 팝업 제어용 상태 추가
   const [members, setMembers] = useState(INITIAL_MEMBERS);
 
-  // 🎲 6자리 랜덤 출석 코드 생성 및 타이머 시작 로직
+  // 🎲 6자리 랜덤 출석 코드 생성 및 팝업 오픈 로직
   const handleStartAttendance = () => {
     if (isStarted) {
-      // 이미 시작된 상태에서 누르면 종료 처리
       if (confirm('출석 지정을 종료하시겠습니까?')) {
         setAttendanceCode('------');
         setIsStarted(false);
+        setIsModalOpen(false);
       }
       return;
     }
@@ -37,9 +38,10 @@ export default function AdminAttendancePage() {
     const randomCode = Math.floor(100000 + Math.random() * 900000).toString();
     setAttendanceCode(randomCode);
     setIsStarted(true);
+    setIsModalOpen(true); // 팝업창 열기
   };
 
-  // 🔘 부원 개별 상태 수동 변경 함수 (라디오 버튼 핸들러)
+  // 🔘 부원 개별 상태 수동 변경 함수
   const handleStatusChange = (memberId: number, newStatus: string) => {
     setMembers((prev) =>
       prev.map((member) =>
@@ -58,100 +60,84 @@ export default function AdminAttendancePage() {
       {/* 상단 네비게이션 바 */}
       <Navbar />
 
-      {/* 메인 본문 영역 (너비 제한 및 중앙 정렬) */}
+      {/* 메인 본문 영역 */}
       <main className="flex-grow w-full max-w-5xl mx-auto px-6 pt-28 pb-24">
         
-        {/* 👑 페이지 메인 타이틀 (ABOUT 페이지 스타일 차용) */}
-        <div className="mb-10">
-          <h1 className="text-[#6B4E48] text-4xl font-extrabold mb-[-10px] relative z-10 ml-4">
-            출석 관리자 모드
-          </h1>
-          <div className="h-3 w-48 bg-[#F2C94C] opacity-60 rounded-full ml-2 relative z-0" />
-        </div>
+        {/* 👑 페이지 메인 타이틀 */}
+        <div className="mb-10 flex flex-col sm:flex-row justify-between sm:items-end gap-4">
+          <div>
+            <h1 className="text-[#6B4E48] text-4xl font-extrabold mb-[-10px] relative z-10 ml-4">
+              출석 관리자 모드
+            </h1>
+            <div className="h-3 w-48 bg-[#F2C94C] opacity-60 rounded-full ml-2 relative z-0" />
+          </div>
 
-        {/* 윗단: 설정 및 코드 생성 대시보드 (2단 그리드 레이아웃) */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-          
-          {/* ⚙️ 1. 출석 조건 설정 카드 */}
-          <div className="lg:col-span-2 bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#D1C7BD] flex flex-col justify-between">
-            <h2 className="text-xl font-bold text-[#6B4E48] mb-6 flex items-center gap-2">
-              <span>⚙️</span> 출석 조건 설정
-            </h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              {/* 날짜 선택 필드 */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-[#9B827D]">출석 일자</label>
-                <input 
-                  type="date" 
-                  value={date}
-                  onChange={(e) => setDate(e.target.value)}
-                  disabled={isStarted}
-                  className="w-full h-12 px-4 rounded-xl border border-[#D1C7BD] text-[#6D4E48] focus:outline-none focus:border-[#6B4E48] bg-[#FDFAF5] disabled:opacity-60 font-medium"
-                />
-              </div>
-
-              {/* 허용 시간 선택 필드 */}
-              <div className="flex flex-col gap-2">
-                <label className="text-sm font-bold text-[#9B827D]">제한 시간 (분)</label>
-                <div className="relative">
-                  <select 
-                    value={allowTime}
-                    onChange={(e) => setAllowTime(e.target.value)}
-                    disabled={isStarted}
-                    className="w-full h-12 px-4 rounded-xl border border-[#D1C7BD] text-[#6D4E48] focus:outline-none focus:border-[#6B4E48] bg-[#FDFAF5] disabled:opacity-60 font-medium appearance-none"
-                  >
-                    <option value="5">5분</option>
-                    <option value="10">10분</option>
-                    <option value="20">20분</option>
-                    <option value="30">30분</option>
-                    <option value="60">1시간</option>
-                  </select>
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[#9B827D] pointer-events-none">▼</span>
-                </div>
-              </div>
-            </div>
-
-            {/* 시작 / 종료 대형 토글 버튼 */}
+          {/* 💡 [추가] 출석 진행 중일 때 언제든 팝업을 다시 열 수 있는 리오픈 버튼 */}
+          {isStarted && (
             <button
-              onClick={handleStartAttendance}
-              className={`w-full py-4 rounded-4xl font-extrabold text-lg shadow-sm transition-all duration-300 hover:scale-[1.02] ${
-                isStarted 
-                  ? 'bg-[#F1EEEA] text-[#9B827D] hover:bg-[#E2DCD3]' 
-                  : 'bg-[#F2C94C] text-[#6B4E48] hover:bg-[#E5B94E]'
-              }`}
+              onClick={() => setIsModalOpen(true)}
+              className="bg-white hover:bg-[#FDFAF5] text-[#6B4E48] border border-[#D1C7BD] font-bold px-4 py-2 rounded-xl text-sm transition-all shadow-sm flex items-center gap-2 self-start sm:self-auto"
             >
-              {isStarted ? '⏱️ 출석 생성 종료하기' : '🚀 랜덤 출석 코드 생성 및 시작'}
+              🔢 출석 코드 다시 확인하기
             </button>
-          </div>
-
-          {/* 🔢 2. 발급된 출석 코드 전광판 카드 */}
-          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#D1C7BD] flex flex-col items-center justify-center text-center">
-            <h2 className="text-sm font-bold text-[#9B827D] tracking-wider uppercase mb-4">
-              CURRENT ATTENDANCE CODE
-            </h2>
-            
-            {/* 6자리 코드 표시창 */}
-            <div className="bg-[#FDFAF5] border border-[#D1C7BD] w-full py-6 rounded-2xl mb-4 transition-all duration-300">
-              <span className="text-4xl md:text-5xl font-black tracking-[0.2em] text-[#6B4E48] pl-[0.2em]">
-                {attendanceCode}
-              </span>
-            </div>
-
-            <p className="text-xs text-[#9B827D] leading-5">
-              {isStarted 
-                ? `부원들에게 위 6자리 코드를 안내하세요.\n설정된 시간(${allowTime}분) 동안 유효합니다.`
-                : '출석 시작 버튼을 누르면\n6자리 랜덤 보안 코드가 발급됩니다.'
-              }
-            </p>
-          </div>
-
+          )}
         </div>
 
-        {/* 📋 아랫단: 부원 실시간 출석부 현황 리스트 */}
-        <div className="bg-white rounded-2xl shadow-xl border border-[#D1C7BD] overflow-hidden">
+        {/* ⚙️ 출석 조건 설정 패널 (기존 좌우 분할 구조에서 풀 사이즈 형태로 넓고 시원하게 변경) */}
+        <div className="bg-white p-6 md:p-8 rounded-2xl shadow-md border border-[#D1C7BD] flex flex-col justify-between mb-12">
+          <h2 className="text-xl font-bold text-[#6B4E48] mb-6 flex items-center gap-2">
+            <span>⚙️</span> 출석 조건 설정
+          </h2>
           
-          {/* 출석부 상단 헤더 구역 */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            {/* 날짜 선택 필드 */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-[#9B827D]">출석 일자</label>
+              <input 
+                type="date" 
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                disabled={isStarted}
+                className="w-full h-12 px-4 rounded-xl border border-[#D1C7BD] text-[#6D4E48] focus:outline-none focus:border-[#6B4E48] bg-[#FDFAF5] disabled:opacity-60 font-medium"
+              />
+            </div>
+
+            {/* 허용 시간 선택 필드 */}
+            <div className="flex flex-col gap-2">
+              <label className="text-sm font-bold text-[#9B827D]">제한 시간 (분)</label>
+              <div className="relative">
+                <select 
+                  value={allowTime}
+                  onChange={(e) => setAllowTime(e.target.value)}
+                  disabled={isStarted}
+                  className="w-full h-12 px-4 rounded-xl border border-[#D1C7BD] text-[#6D4E48] focus:outline-none focus:border-[#6B4E48] bg-[#FDFAF5] disabled:opacity-60 font-medium appearance-none"
+                >
+                  <option value="5">5분</option>
+                  <option value="10">10분</option>
+                  <option value="20">20분</option>
+                  <option value="30">30분</option>
+                  <option value="60">1시간</option>
+                </select>
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-xs text-[#9B827D] pointer-events-none">▼</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 시작 / 종료 토글 버튼 */}
+          <button
+            onClick={handleStartAttendance}
+            className={`w-full py-4 rounded-4xl font-extrabold text-lg shadow-sm transition-all duration-300 hover:scale-[1.01] ${
+              isStarted 
+                ? 'bg-[#F1EEEA] text-[#9B827D] hover:bg-[#E2DCD3]' 
+                : 'bg-[#F2C94C] text-[#6B4E48] hover:bg-[#E5B94E]'
+            }`}
+          >
+            {isStarted ? '⏱️ 출석 지정 종료하기 (마감)' : '🚀 랜덤 출석 코드 생성 및 팝업창 띄우기'}
+          </button>
+        </div>
+
+        {/* 📋 부원 실시간 출석부 현황 리스트 */}
+        <div className="bg-white rounded-2xl shadow-xl border border-[#D1C7BD] overflow-hidden">
           <div className="bg-[#F1EEEA] px-6 py-5 border-b border-[#D1C7BD] flex flex-col sm:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
               <h3 className="text-xl font-extrabold text-[#6B4E48]">📋 동아리 명부 및 실시간 상태</h3>
@@ -159,8 +145,6 @@ export default function AdminAttendancePage() {
                 {members.length}명
               </span>
             </div>
-            
-            {/* 전체 임시저장 버튼 */}
             <button 
               onClick={handleSaveAll}
               className="bg-[#6B4E48] hover:bg-[#573E39] text-white font-bold px-6 py-2 rounded-4xl text-sm transition-all shadow-sm hover:scale-105"
@@ -169,7 +153,7 @@ export default function AdminAttendancePage() {
             </button>
           </div>
 
-          {/* 실시간 부원 테이블 (반응형 대응) */}
+          {/* 실시간 부원 현황 테이블 */}
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
@@ -182,19 +166,12 @@ export default function AdminAttendancePage() {
               <tbody className="divide-y divide-gray-100">
                 {members.map((member, index) => (
                   <tr key={member.id} className="hover:bg-[#FDF8EB]/30 transition-colors">
-                    {/* 부원 번호 */}
                     <td className="p-4 pl-8 text-center font-medium text-[#9B827D]">{index + 1}</td>
-                    
-                    {/* 부원 이름 */}
                     <td className="p-4 font-bold text-[#6D4E48] text-base">{member.name}</td>
-                    
-                    {/* 라디오 버튼 선택 구역 */}
                     <td className="p-4">
                       <div className="flex flex-wrap items-center gap-3 sm:gap-6 justify-center sm:justify-start">
                         {['출석', '지각', '결석'].map((status) => {
                           const isChecked = member.status === status;
-                          
-                          // 상태별 커스텀 스타일 입히기 (라디오 색상 디테일)
                           let accentColor = 'checked:bg-green-500';
                           if (status === '지각') accentColor = 'checked:bg-orange-400';
                           if (status === '결석') accentColor = 'checked:bg-red-500';
@@ -220,8 +197,6 @@ export default function AdminAttendancePage() {
                             </label>
                           );
                         })}
-                        
-                        {/* 현재 상태를 요약해 주는 미니 배지 */}
                         <span className={`text-xs px-2.5 py-1 rounded-md font-bold ml-auto hidden md:inline-block ${
                           member.status === '출석' ? 'bg-green-50 text-green-600' :
                           member.status === '지각' ? 'bg-orange-50 text-orange-600' :
@@ -236,9 +211,49 @@ export default function AdminAttendancePage() {
               </tbody>
             </table>
           </div>
-
         </div>
       </main>
+
+      {/* 🚨 [새로운 컴포넌트] 출석코드 전광판 모달 팝업창 영역 */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* 어두운 배경 반투명 필터 + 블러 효과 */}
+          <div 
+            className="absolute inset-0 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={() => setIsModalOpen(false)} // 바깥 어두운 영역 누르면 닫히기
+          />
+          
+          {/* 팝업 본체 박스 (UNTOC 톤앤매너 매칭) */}
+          <div className="relative bg-white w-full max-w-lg p-8 md:p-10 rounded-2xl shadow-2xl border border-[#D1C7BD] text-center flex flex-col items-center animate-in fade-in zoom-in-95 duration-200">
+            
+            <h2 className="text-sm font-black text-[#9B827D] tracking-widest uppercase mb-6">
+              📢 생성된 출석보안코드
+            </h2>
+            
+            {/* 자간을 넓혀 아주 큼직하게 배치한 번호 디스플레이 */}
+            <div className="bg-[#FDFAF5] border border-[#D1C7BD] w-full py-8 rounded-2xl mb-6 shadow-inner">
+              <span className="text-5xl md:text-6xl font-black tracking-[0.25em] text-[#6B4E48] pl-[0.25em]">
+                {attendanceCode}
+              </span>
+            </div>
+
+            <div className="text-sm text-[#6D4E48] font-medium leading-6 mb-8">
+              <p>부원들에게 위 6자리 코드를 즉시 공지해 주세요.</p>
+              <p className="mt-1 text-xs text-[#9B827D]">
+                설정된 제한시간(<span className="text-[#6B4E48] font-bold">{allowTime}분</span>) 동안 시스템이 활성화됩니다.
+              </p>
+            </div>
+
+            {/* 팝업 닫기 버튼 */}
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="w-full bg-[#F2C94C] hover:bg-[#E5B94E] text-[#6B4E48] font-extrabold py-3.5 rounded-4xl transition-all duration-300 shadow-sm hover:scale-105 text-base"
+            >
+              창 닫고 출석부 확인하기
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* 하단 푸터 */}
       <Footer />
