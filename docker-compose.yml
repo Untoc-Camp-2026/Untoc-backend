@@ -1,12 +1,12 @@
 services:
+
   db:
     image: mysql:8.0
-    restart: unless-stopped
+    restart: always
+    env_file:
+      - .env
     environment:
-      MYSQL_ROOT_PASSWORD: 1520
       MYSQL_DATABASE: untoc
-    ports:
-      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
@@ -15,19 +15,43 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+    ports:
+    - "3307:3306"
+    networks:
+      - internal_net
+
 
   api:
-    build: ./app/
+    build:
+      context: ./app
+    restart: always
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      SQLALCHEMY_DATABASE_URL: mysql+aiomysql://root:1520@db:3306/untoc
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     volumes:
-      - ./app:/app
-    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+      - uploads_data:/app/uploads
+    networks:
+      - internal_net
+
+  frontend:
+    build:
+      context: ./front 
+    restart: always
+    ports:
+      - "80:3000" 
+    depends_on:
+      - api
+    networks:
+      - internal_net
+
+networks:
+  internal_net:
+    driver: bridge
 
 volumes:
   mysql_data:
+  uploads_data:
